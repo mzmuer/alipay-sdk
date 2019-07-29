@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"sort"
 	"time"
 )
@@ -39,7 +38,7 @@ func NewPay(appId, publicKey, privateKey string, isSandBox bool) *Pay {
 	}
 }
 
-func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) (interface{}, error) {
+func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) ([]byte, error) {
 	r := Request{
 		Method:     method,
 		NotifyUrl:  notifyUrl,
@@ -61,9 +60,9 @@ func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) (interfa
 		return nil, err
 	}
 
-	ioutil.WriteFile("xxx.html", resp, 0777)
-
-	fmt.Println("====", string(resp))
+	//ioutil.WriteFile("xxx.html", resp, 0777)
+	//
+	//fmt.Println("====", string(resp))
 
 	return resp, err
 }

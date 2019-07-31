@@ -1,10 +1,8 @@
 package alipay
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"sort"
 	"time"
 )
 
@@ -145,7 +143,7 @@ func (p *Pay) getRequestHolderWithSign(r *Request, accessToken, appAuthToken str
 
 	// 签名 - 必选参数
 	if p.SignType != "" {
-		signContent := getSignatureContent(params)
+		signContent := GetSignatureContent(params)
 		params[Sign], err = p.Signer.Sign(signContent, p.SignType, p.Charset)
 		if err != nil {
 			return nil, err
@@ -155,35 +153,6 @@ func (p *Pay) getRequestHolderWithSign(r *Request, accessToken, appAuthToken str
 	}
 
 	return params, nil
-}
-
-// 组成签名raw串
-func getSignatureContent(m map[string]string) string {
-	keys := make([]string, 0, len(m))
-
-	for key := range m {
-		keys = append(keys, key)
-	}
-
-	// 对keys排序
-	sort.Strings(keys)
-
-	var buf bytes.Buffer
-	for i, key := range keys {
-		if m[key] == "" {
-			continue
-		}
-
-		if i != 0 {
-			buf.WriteString("&")
-		}
-
-		buf.WriteString(key)
-		buf.WriteString("=")
-		buf.WriteString(m[key])
-	}
-
-	return buf.String()
 }
 
 // --

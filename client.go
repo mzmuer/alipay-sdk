@@ -15,8 +15,8 @@ type Pay struct {
 	SignType    string // RSA2
 	PublicKey   string
 	PrivateKey  string
-	Signer      signer
-	SignChecker signChecker
+	Signer      *signer
+	SignChecker *signChecker
 	Format      string // json
 	EncryptType string // AES
 	isSandBox   bool
@@ -28,17 +28,17 @@ func NewPay(appId, publicKey, privateKey string, isSandBox bool) *Pay {
 		Charset:     "utf-8",
 		Version:     "1.0",
 		PublicKey:   publicKey,
-		SignChecker: signChecker{publicKey: publicKey},
+		SignChecker: &signChecker{publicKey: publicKey},
 		SignType:    SignTypeRSA2,
 		Format:      "json",
 		EncryptType: EncryptTypeAes,
 		PrivateKey:  privateKey,
-		Signer:      signer{PrivateKey: privateKey},
+		Signer:      &signer{PrivateKey: privateKey},
 		isSandBox:   isSandBox,
 	}
 }
 
-func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) ([]byte, error) {
+func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) (Response, error) {
 	r := Request{
 		Method:     method,
 		NotifyUrl:  notifyUrl,
@@ -55,16 +55,46 @@ func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) ([]byte,
 		gateway = SandboxGateway
 	}
 
-	resp, err := doPost(gateway, requestParams)
+	b, err := doPost(gateway, requestParams)
 	if err != nil {
 		return nil, err
 	}
 
-	//ioutil.WriteFile("xxx.html", resp, 0777)
-	//
-	//fmt.Println("====", string(resp))
+	resp, err := _parseResponse(bizContent, b)
+	if err != nil {
+		return nil, err
+	}
 
-	return resp, err
+	if resp.IsSuccess() ||
+		(!resp.IsSuccess() && resp.GetSign() != "") {
+		match, err := p.checkResponseSign(resp.GetRawParams(), resp.GetSign())
+		if err != nil {
+			return nil, err
+		}
+
+		if !match { // 签名不匹配
+			return nil, fmt.Errorf("sign check fail: check Sign and Data Fail")
+		}
+	}
+
+	return resp, nil
+}
+
+func _parseResponse(anchoring interface{}, data []byte) (Response, error) {
+	switch anchoring.(type) {
+	case TradeCreateReq:
+		resp := TradeCreateResp{}
+		err := json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, err
+		}
+
+		// 解析到结构
+		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+		return &resp, err
+	default:
+		return nil, fmt.Errorf("未知的请求类型")
+	}
 }
 
 func (p *Pay) getRequestHolderWithSign(r *Request, accessToken, appAuthToken string) (map[string]string, error) {
@@ -154,4 +184,13 @@ func getSignatureContent(m map[string]string) string {
 	}
 
 	return buf.String()
+}
+
+// --
+func (p *Pay) checkResponseSign(sourceContent string, signature string) (bool, error) {
+	if p.SignChecker == nil {
+		return true, nil
+	}
+
+	return p.SignChecker.Check(sourceContent, signature, p.SignType, p.Charset)
 }

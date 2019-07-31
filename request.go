@@ -15,7 +15,7 @@ type (
 
 	// ------------------- 业务结构 ---------------------------
 	// 统一收单交易创建接口
-	TradeCreate struct {
+	TradeCreateReq struct {
 		Body           string `json:"body"`            // 对一笔交易的具体描述信息。如果是多种商品，请将商品描述字符串累加传给body。
 		Subject        string `json:"subject"`         // 商品的标题/交易标题/订单标题/订单关键字等。
 		OutTradeNo     string `json:"out_trade_no"`    //商户订单号,64个字符以内、只能包含字母、数字、下划线；需保证在商户端不重复

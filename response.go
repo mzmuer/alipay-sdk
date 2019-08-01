@@ -14,6 +14,7 @@ type commonResponse struct {
 // TODO: 自定义json解析
 
 type Response interface {
+	GetSubCode() string
 	IsSuccess() bool
 	GetSign() string
 	GetRawParams() string
@@ -28,6 +29,10 @@ type TradeCreateResp struct {
 	} `json:"-"`
 	RawResp json.RawMessage `json:"alipay_trade_create_response"`
 	Sign    string          `json:"sign"` // 签名
+}
+
+func (r *TradeCreateResp) GetSubCode() string {
+	return r.Resp.SubCode
 }
 
 func (r *TradeCreateResp) IsSuccess() bool {
@@ -69,6 +74,10 @@ type TradeRefundResp struct {
 	Sign    string          `json:"sign"` // 签名
 }
 
+func (r *TradeRefundResp) GetSubCode() string {
+	return r.Resp.SubCode
+}
+
 func (r *TradeRefundResp) IsSuccess() bool {
 	return r.Resp.SubCode == ""
 }
@@ -103,6 +112,10 @@ type TradeRefundQueryResp struct {
 	} `json:"-"`
 	RawResp json.RawMessage `json:"alipay_trade_fastpay_refund_query_response"`
 	Sign    string          `json:"sign"` // 签名
+}
+
+func (r *TradeRefundQueryResp) GetSubCode() string {
+	return r.Resp.SubCode
 }
 
 func (r *TradeRefundQueryResp) IsSuccess() bool {

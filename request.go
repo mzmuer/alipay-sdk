@@ -1,6 +1,7 @@
 package alipay
 
 type (
+	// 请求结构
 	Request struct {
 		Method       string // 请求方法
 		NotifyUrl    string
@@ -13,7 +14,7 @@ type (
 		BizContent   interface{}
 	}
 
-	// ------------------- 业务结构 ---------------------------
+	// ------------------- 请求实际业务结构 ---------------------------
 	// 统一收单交易创建接口
 	TradeCreateReq struct {
 		Body           string `json:"body"`            // 对一笔交易的具体描述信息。如果是多种商品，请将商品描述字符串累加传给body。
@@ -52,5 +53,16 @@ type (
 		OutTradeNo   string `json:"out_trade_no"`   // 订单支付时传入的商户订单号,和支付宝交易号不能同时为空。 trade_no,out_trade_no如果同时存在优先取trade_no
 		TradeNo      string `json:"trade_no"`       // 支付宝交易号，和商户订单号不能同时为空
 		OutRequestNo string `json:"out_request_no"` // 请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的外部交易号
+	}
+
+	// alipay.fund.trans.toaccount.transfer(单笔转账到支付宝账户接口)
+	FundTransToaccountReq struct {
+		OutBizNo      string `json:"out_biz_no"`      // 商户转账唯一订单号。发起转账来源方定义的转账单据ID，用于将转账回执通知给来源方。
+		PayeeType     string `json:"payee_type"`      // 收款方账户类型。可取值： 1、ALIPAY_USERID：支付宝账号对应的支付宝唯一用户号。以2088开头的16位纯数字组成。 2、ALIPAY_LOGONID：支付宝登录号，支持邮箱和手机号格式。
+		PayeeAccount  string `json:"payee_account"`   // 收款方账户。与payee_type配合使用。付款方和收款方不能是同一个账户。
+		Amount        string `json:"amount"`          // 转账金额，单位：元。只支持2位小数，小数点前最大支持13位，金额必须大于等于0.1元。
+		PayerShowName string `json:"payer_show_name"` // 付款方姓名。显示在收款方的账单详情页。如果该字段不传，则默认显示付款方的支付宝认证姓名或单位名称。
+		PayeeRealName string `json:"payee_real_name"` // 收款方真实姓名。如果本参数不为空，则会校验该账户在支付宝登记的实名是否与收款方真实姓名一致。
+		Remark        string `json:"remark"`          // 转账备注。当付款方为企业账户，且转账金额达到（大于等于）50000元，remark不能为空。
 	}
 )

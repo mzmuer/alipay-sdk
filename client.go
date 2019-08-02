@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/mzmuer/alipay-sdk/response"
 )
 
 type Pay struct {
@@ -36,7 +38,7 @@ func NewPay(appId, publicKey, privateKey string, isSandBox bool) *Pay {
 	}
 }
 
-func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) (Response, error) {
+func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) (response.Response, error) {
 	r := Request{
 		Method:     method,
 		NotifyUrl:  notifyUrl,
@@ -78,10 +80,10 @@ func (p *Pay) Execute(method, notifyUrl string, bizContent interface{}) (Respons
 	return resp, nil
 }
 
-func _parseResponse(anchoring interface{}, data []byte) (Response, error) {
+func _parseResponse(anchoring interface{}, data []byte) (response.Response, error) {
 	switch anchoring.(type) {
 	case TradeCreateReq:
-		resp := TradeCreateResp{}
+		resp := response.TradeCreateResp{}
 		err := json.Unmarshal(data, &resp)
 		if err != nil {
 			return nil, err
@@ -91,7 +93,7 @@ func _parseResponse(anchoring interface{}, data []byte) (Response, error) {
 		err = json.Unmarshal(resp.RawResp, &resp.Resp)
 		return &resp, err
 	case TradeRefundReq:
-		resp := TradeRefundResp{}
+		resp := response.TradeRefundResp{}
 		err := json.Unmarshal(data, &resp)
 		if err != nil {
 			return nil, err
@@ -101,7 +103,7 @@ func _parseResponse(anchoring interface{}, data []byte) (Response, error) {
 		err = json.Unmarshal(resp.RawResp, &resp.Resp)
 		return &resp, err
 	case TradeRefundQueryReq:
-		resp := TradeRefundQueryResp{}
+		resp := response.TradeRefundQueryResp{}
 		err := json.Unmarshal(data, &resp)
 		if err != nil {
 			return nil, err

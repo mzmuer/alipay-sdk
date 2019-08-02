@@ -112,6 +112,26 @@ func _parseResponse(anchoring interface{}, data []byte) (response.Response, erro
 		// 解析到结构
 		err = json.Unmarshal(resp.RawResp, &resp.Resp)
 		return &resp, err
+	case FundTransToaccountReq:
+		resp := response.FundTransToaccountResp{}
+		err := json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, err
+		}
+
+		// 解析到结构
+		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+		return &resp, err
+	case FundTransOrderQueryReq:
+		resp := response.FundTransOrderQueryResp{}
+		err := json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, err
+		}
+
+		// 解析到结构
+		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+		return &resp, err
 	default:
 		return nil, fmt.Errorf("未知的请求类型")
 	}

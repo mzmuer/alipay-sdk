@@ -10,7 +10,7 @@ type FundTransToaccountResp struct {
 		OrderId  string `json:"order_id"`   // 支付宝转账单据号，成功一定返回，失败可能不返回也可能返回。
 		PayDate  string `json:"pay_date"`   // 支付时间：格式为yyyy-MM-dd HH:mm:ss，仅转账成功返回。
 	} `json:"-"`
-	RawResp json.RawMessage `json:"alipay_trade_fastpay_refund_query_response"`
+	RawResp json.RawMessage `json:"alipay_fund_trans_toaccount_transfer_response"`
 	Sign    string          `json:"sign"` // 签名
 }
 

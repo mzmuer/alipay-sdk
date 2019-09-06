@@ -10,15 +10,19 @@ import (
 )
 
 type signChecker struct {
-	publicKey string
+	PublicKey *rsa.PublicKey
+}
+
+func NewSignChecker(publicKey []byte) (*signChecker, error) {
+	pubKey, err := _genPubKey(publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &signChecker{PublicKey: pubKey}, err
 }
 
 func (s *signChecker) Check(sourceContent string, signature string, signType string, charset string) (bool, error) {
-	pubKey, err := genPubKey([]byte(s.publicKey))
-	if err != nil {
-		return false, err
-	}
-
 	decoded, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return false, err
@@ -28,9 +32,9 @@ func (s *signChecker) Check(sourceContent string, signature string, signType str
 	h.Write([]byte(sourceContent))
 
 	if signType == SignTypeRSA2 {
-		err = rsa.VerifyPKCS1v15(pubKey, crypto.SHA256, h.Sum(nil), decoded)
+		err = rsa.VerifyPKCS1v15(s.PublicKey, crypto.SHA256, h.Sum(nil), decoded)
 	} else if signType == SignTypeRSA {
-		err = rsa.VerifyPKCS1v15(pubKey, crypto.SHA1, h.Sum(nil), decoded)
+		err = rsa.VerifyPKCS1v15(s.PublicKey, crypto.SHA1, h.Sum(nil), decoded)
 	}
 
 	if err != nil {
@@ -40,7 +44,7 @@ func (s *signChecker) Check(sourceContent string, signature string, signType str
 	return true, nil
 }
 
-func genPubKey(key []byte) (*rsa.PublicKey, error) {
+func _genPubKey(key []byte) (*rsa.PublicKey, error) {
 	encodedKey, err := base64.StdEncoding.DecodeString(string(key))
 	if err != nil {
 		return nil, err

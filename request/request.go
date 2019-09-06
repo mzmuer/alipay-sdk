@@ -1,4 +1,4 @@
-package alipay
+package request
 
 type (
 	// 请求结构
@@ -12,6 +12,7 @@ type (
 		NeedEncrypt  bool
 		EncryptType  string
 		BizContent   interface{}
+		Params       map[string]string
 	}
 
 	// ------------------- 请求实际业务结构 ---------------------------

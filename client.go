@@ -116,7 +116,7 @@ func (c *Client) LoadAliPayPublicCert(b []byte) error {
 	return nil
 }
 
-func (p *Client) Execute(method, notifyUrl string, bizContent interface{}, params map[string]string) (response.Response, error) {
+func (p *Client) Execute(method, notifyUrl string, bizContent interface{}, params map[string]string, result response.Response) error {
 	r := request.Request{
 		Method:     method,
 		NotifyUrl:  notifyUrl,
@@ -124,9 +124,10 @@ func (p *Client) Execute(method, notifyUrl string, bizContent interface{}, param
 		Params:     params,
 	}
 
+	// 签名请求
 	requestParams, err := p.getRequestHolderWithSign(&r, "", "")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	gateway := Gateway
@@ -136,88 +137,95 @@ func (p *Client) Execute(method, notifyUrl string, bizContent interface{}, param
 
 	b, err := doPost(gateway, requestParams)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	resp, err := _parseResponse(method, bizContent, b)
-	if err != nil {
-		return nil, err
+	if err = response.ParseResponse(method, b, result); err != nil {
+		return err
 	}
 
-	if resp.IsSuccess() ||
-		(!resp.IsSuccess() && resp.GetSign() != "") {
-		match, err := p.checkResponseSign(resp.GetRawParams(), resp.GetSign())
+	if result.IsSuccess() && result.GetSign() != "" {
+		match, err := p.checkResponseSign(result.GetRawParams(), result.GetSign())
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if !match { // 签名不匹配
-			return nil, fmt.Errorf("sign check fail: check Sign and Data Fail")
+			return fmt.Errorf("sign check fail: check Sign and Data Fail")
 		}
 	}
 
-	return resp, nil
+	return nil
 }
 
-func _parseResponse(method string, anchoring interface{}, data []byte) (response.Response, error) {
-	jsKey := strings.ReplaceAll(method, ".", "_") + "_response"
-
-	switch anchoring.(type) {
-	case request.TradeCreateReq:
-		resp := response.TradeCreateResp{}
-		err := json.Unmarshal(data, &resp)
-		if err != nil {
-			return nil, err
-		}
-
-		// 解析到结构
-		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-		return &resp, err
-	case request.TradeRefundReq:
-		resp := response.TradeRefundResp{}
-		err := json.Unmarshal(data, &resp)
-		if err != nil {
-			return nil, err
-		}
-
-		// 解析到结构
-		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-		return &resp, err
-	case request.TradeRefundQueryReq:
-		resp := response.TradeRefundQueryResp{}
-		err := json.Unmarshal(data, &resp)
-		if err != nil {
-			return nil, err
-		}
-
-		// 解析到结构
-		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-		return &resp, err
-	case request.FundTransToaccountReq:
-		resp := response.FundTransToaccountResp{}
-		err := json.Unmarshal(data, &resp)
-		if err != nil {
-			return nil, err
-		}
-
-		// 解析到结构
-		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-		return &resp, err
-	case request.FundTransOrderQueryReq:
-		resp := response.FundTransOrderQueryResp{}
-		err := json.Unmarshal(data, &resp)
-		if err != nil {
-			return nil, err
-		}
-
-		// 解析到结构
-		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-		return &resp, err
-	default:
-		resp := commonResponse
-		return nil, fmt.Errorf("未知的请求类型")
-	}
-}
+//
+//func _parseResponse(method string, data []byte) (response.Response, error) {
+//	var (
+//		jsKey  = strings.ReplaceAll(method, ".", "_") + "_response"
+//		tmpMap = map[string]json.RawMessage{}
+//	)
+//
+//	err := json.Unmarshal(data, &tmpMap)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	switch method {
+//	case AlipayTradeCreate:
+//		resp := response.TradeCreateResp{}
+//		resp.RawResp = string(tmpMap[jsKey])
+//		resp.Sign = string(tmpMap["sign"])
+//
+//		err := json.Unmarshal(tmpMap[jsKey], &resp)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		return &resp, err
+//	case AlipayTradeRefund:
+//		resp := response.TradeRefundResp{}
+//		err := json.Unmarshal(data, &resp)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		// 解析到结构
+//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+//		return &resp, err
+//	case AlipayTradeFastpayRefundQuery:
+//		resp := response.TradeRefundQueryResp{}
+//		err := json.Unmarshal(data, &resp)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		// 解析到结构
+//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+//		return &resp, err
+//	case AlipayFundTransToaccountTransfer:
+//		resp := response.FundTransToaccountResp{}
+//		err := json.Unmarshal(data, &resp)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		// 解析到结构
+//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+//		return &resp, err
+//	case AlipayFundTransOrderQuery:
+//		resp := response.FundTransOrderQueryResp{}
+//		err := json.Unmarshal(data, &resp)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		// 解析到结构
+//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
+//		return &resp, err
+//	default:
+//		return nil, fmt.Errorf("暂不支持的未知的请求方法[%s]", method)
+//	}
+//}
 
 func _getCertSN(cert *x509.Certificate) string {
 	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))

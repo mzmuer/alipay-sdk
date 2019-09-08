@@ -33,11 +33,4 @@ const (
 	// Domain
 	Gateway        = "https://openapi.alipay.com/gateway.do"
 	SandboxGateway = "https://openapi.alipaydev.com/gateway.do"
-
-	// request method
-	AlipayTradeCreate                = "alipay.trade.create"
-	AlipayTradeRefund                = "alipay.trade.refund"
-	AlipayTradeFastpayRefundQuery    = "alipay.trade.fastpay.refund.query"
-	AlipayFundTransToaccountTransfer = "alipay.fund.trans.toaccount.transfer"
-	AlipayFundTransOrderQuery        = "alipay.fund.trans.order.query"
 )

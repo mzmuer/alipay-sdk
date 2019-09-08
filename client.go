@@ -17,7 +17,6 @@ import (
 type Client struct {
 	AppId       string
 	Charset     string // utf-8
-	Version     string // 1.0
 	SignType    string // RSA2
 	Signer      *signer
 	SignChecker *signChecker
@@ -46,7 +45,6 @@ func NewClient(appId string, publicKey, privateKey []byte, isSandBox bool) (*Cli
 	return &Client{
 		AppId:       appId,
 		Charset:     "utf-8",
-		Version:     "1.0",
 		SignChecker: signChecker,
 		SignType:    SignTypeRSA2,
 		Format:      "json",
@@ -116,18 +114,11 @@ func (c *Client) LoadAliPayPublicCert(b []byte) error {
 	return nil
 }
 
-func (p *Client) Execute(method, notifyUrl string, bizContent interface{}, params map[string]string, result response.Response) error {
-	r := request.Request{
-		Method:     method,
-		NotifyUrl:  notifyUrl,
-		BizContent: bizContent,
-		Params:     params,
-	}
-
-	// 签名请求
-	requestParams, err := p.getRequestHolderWithSign(&r, "", "")
+func (p *Client) Execute(r request.Request, result response.Response) (string, error) {
+	// 构造请求map请求
+	requestParams, err := p.getRequestHolderWithSign(r, "", "")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	gateway := Gateway
@@ -137,117 +128,50 @@ func (p *Client) Execute(method, notifyUrl string, bizContent interface{}, param
 
 	b, err := doPost(gateway, requestParams)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if err = response.ParseResponse(method, b, result); err != nil {
-		return err
+	if err = response.ParseResponse(r.GetMethod(), b, result); err != nil {
+		return string(b), err
 	}
 
-	if result.IsSuccess() && result.GetSign() != "" {
+	if result.GetSign() != "" {
 		match, err := p.checkResponseSign(result.GetRawParams(), result.GetSign())
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		if !match { // 签名不匹配
-			return fmt.Errorf("sign check fail: check Sign and Data Fail")
+			return "", fmt.Errorf("sign check fail: check Sign and Data Fail")
 		}
 	}
 
-	return nil
+	return "", nil
 }
 
-//
-//func _parseResponse(method string, data []byte) (response.Response, error) {
-//	var (
-//		jsKey  = strings.ReplaceAll(method, ".", "_") + "_response"
-//		tmpMap = map[string]json.RawMessage{}
-//	)
-//
-//	err := json.Unmarshal(data, &tmpMap)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	switch method {
-//	case AlipayTradeCreate:
-//		resp := response.TradeCreateResp{}
-//		resp.RawResp = string(tmpMap[jsKey])
-//		resp.Sign = string(tmpMap["sign"])
-//
-//		err := json.Unmarshal(tmpMap[jsKey], &resp)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		return &resp, err
-//	case AlipayTradeRefund:
-//		resp := response.TradeRefundResp{}
-//		err := json.Unmarshal(data, &resp)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		// 解析到结构
-//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-//		return &resp, err
-//	case AlipayTradeFastpayRefundQuery:
-//		resp := response.TradeRefundQueryResp{}
-//		err := json.Unmarshal(data, &resp)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		// 解析到结构
-//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-//		return &resp, err
-//	case AlipayFundTransToaccountTransfer:
-//		resp := response.FundTransToaccountResp{}
-//		err := json.Unmarshal(data, &resp)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		// 解析到结构
-//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-//		return &resp, err
-//	case AlipayFundTransOrderQuery:
-//		resp := response.FundTransOrderQueryResp{}
-//		err := json.Unmarshal(data, &resp)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		// 解析到结构
-//		err = json.Unmarshal(resp.RawResp, &resp.Resp)
-//		return &resp, err
-//	default:
-//		return nil, fmt.Errorf("暂不支持的未知的请求方法[%s]", method)
-//	}
-//}
-
+// 获取证书的sn
 func _getCertSN(cert *x509.Certificate) string {
 	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
 	return hex.EncodeToString(value[:])
 }
 
-func (c *Client) getRequestHolderWithSign(r *request.Request, accessToken, appAuthToken string) (map[string]string, error) {
+// 构造请求map
+func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAuthToken string) (map[string]string, error) {
 	params := map[string]string{}
 
 	// 必选参数
-	params[Method] = r.Method
-	params[Version] = c.Version
+	params[Method] = r.GetMethod()
+	params[Version] = r.GetApiVersion()
 	params[AppId] = c.AppId
 	params[SignType] = c.SignType
-	params[TerminalType] = r.TerminalType
-	params[TerminalInfo] = r.TerminalInfo
-	params[NotifyUrl] = r.NotifyUrl
-	params[ReturnUrl] = r.ReturnUrl
+	params[TerminalType] = r.GetTerminalType()
+	params[TerminalInfo] = r.GetTerminalInfo()
+	params[NotifyUrl] = r.GetNotifyUrl()
+	params[ReturnUrl] = r.GetReturnUrl()
 	params[Charset] = c.Charset
 	params[Timestamp] = time.Now().Format("2006-01-02 15:03:04")
-	if r.NeedEncrypt {
-		params[EncryptType] = r.EncryptType
+	if r.GetNeedEncrypt() {
+		params[EncryptType] = c.EncryptType
 	}
 
 	if c.appPubCertSN != "" {
@@ -262,11 +186,11 @@ func (c *Client) getRequestHolderWithSign(r *request.Request, accessToken, appAu
 	params[Format] = c.Format
 	params[AccessToken] = accessToken
 	params[AlipaySdk] = SdkVersion
-	params[ProdCode] = r.ProdCode
+	params[ProdCode] = r.GetProdCode()
 
 	// app参数
-	if r.BizContent != nil {
-		bizContent, err := json.Marshal(r.BizContent)
+	if params[BizContentKey] == "" && r.GetBizModel() != nil {
+		bizContent, err := json.Marshal(r.GetBizModel())
 		if err != nil {
 			return nil, err
 		}
@@ -274,12 +198,12 @@ func (c *Client) getRequestHolderWithSign(r *request.Request, accessToken, appAu
 		params[BizContentKey] = string(bizContent)
 	}
 
-	if r.NeedEncrypt {
-		if r.EncryptType == "" {
+	if r.GetNeedEncrypt() {
+		if c.EncryptType == "" {
 			return nil, fmt.Errorf("加密类型错误")
 		}
 
-		params[EncryptType] = r.EncryptType
+		params[EncryptType] = c.EncryptType
 		// TODO: 对r.BizContent一波加密操作
 		// params[BizContentKey] = encryptContent
 	}
@@ -289,7 +213,7 @@ func (c *Client) getRequestHolderWithSign(r *request.Request, accessToken, appAu
 	}
 
 	// 额外参数
-	for key, v := range r.Params {
+	for key, v := range r.GetTextParams() {
 		params[key] = v
 	}
 
@@ -309,10 +233,10 @@ func (c *Client) getRequestHolderWithSign(r *request.Request, accessToken, appAu
 }
 
 // --
-func (p *Client) checkResponseSign(sourceContent string, signature string) (bool, error) {
-	if p.SignChecker == nil {
+func (c *Client) checkResponseSign(sourceContent string, signature string) (bool, error) {
+	if c.SignChecker == nil {
 		return true, nil
 	}
 
-	return p.SignChecker.Check(sourceContent, signature, p.SignType, p.Charset)
+	return c.SignChecker.Check(sourceContent, signature, c.SignType, c.Charset)
 }

@@ -60,8 +60,8 @@ func ParseResponse(method string, data []byte, result Response) error {
 		return err
 	}
 
-	result.SetRawParams(string(tmpMap[jsKey]))
-	result.SetSign(string(tmpMap["sign"]))
+	result.SetRawParams(strings.Trim(string(tmpMap[jsKey]), "\""))
+	result.SetSign(strings.Trim(string(tmpMap["sign"]), "\""))
 
 	return json.Unmarshal(tmpMap[jsKey], result)
 }

@@ -22,6 +22,10 @@ func NewSignChecker(publicKey []byte) (*signChecker, error) {
 	return &signChecker{PublicKey: pubKey}, err
 }
 
+func NewSignCheckerWithPublicKey(k *rsa.PublicKey) *signChecker {
+	return &signChecker{PublicKey: k}
+}
+
 func (s *signChecker) Check(sourceContent string, signature string, signType string, charset string) (bool, error) {
 	decoded, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {

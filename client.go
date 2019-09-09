@@ -2,6 +2,7 @@ package alipay
 
 import (
 	"crypto/md5"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
@@ -23,26 +24,27 @@ type Client struct {
 	Format      string // json
 	EncryptType string // AES
 
-	// 公钥证书相关参数
-	appPubCertSN     string
-	alipayRootCertSN string
-	alipayPubCertSN  string
+	// 公钥证书相关
+	appPubCertSN       string
+	alipayRootCertSN   string
+	alipayPubCertSN    string
+	alipayPublicKeyMap map[string]*rsa.PublicKey
 
 	isSandBox bool
 }
 
-func NewClient(appId string, publicKey, privateKey []byte, isSandBox bool) (*Client, error) {
-	signChecker, err := NewSignChecker(publicKey)
+func NewClient(appId string, publicKey, privateKey string, isSandBox bool) (*Client, error) {
+	signChecker, err := NewSignChecker([]byte(publicKey))
 	if err != nil {
 		return nil, err
 	}
 
-	signer, err := NewSigner(privateKey)
+	signer, err := NewSigner([]byte(privateKey))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{
+	c := Client{
 		AppId:       appId,
 		Charset:     "utf-8",
 		SignChecker: signChecker,
@@ -51,78 +53,55 @@ func NewClient(appId string, publicKey, privateKey []byte, isSandBox bool) (*Cli
 		EncryptType: EncryptTypeAes,
 		Signer:      signer,
 		isSandBox:   isSandBox,
-	}, nil
+	}
+
+	return &c, nil
 }
 
-// 加载应用公钥证书
-func (c *Client) LoadAppPublicCert(b []byte) error {
-	block, _ := pem.Decode(b)
-	if block == nil {
-		return fmt.Errorf("failed to parse certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
+func NewCertClient(appId, privateKey, appPubCert, alipayRootCert, alipayPubCert string, isSandBox bool) (*Client, error) {
+	signer, err := NewSigner([]byte(privateKey))
 	if err != nil {
-		return fmt.Errorf("failed to parse certificate: " + err.Error())
+		return nil, err
 	}
 
-	c.appPubCertSN = _getCertSN(cert)
-	return nil
-}
-
-// 加载支付宝根证书
-func (c *Client) LoadAliPayRootCert(b []byte) error {
-	var certStrList = strings.SplitAfter(string(b), "-----END CERTIFICATE-----")
-
-	var certSNList = make([]string, 0, len(certStrList))
-	for _, v := range certStrList {
-		block, _ := pem.Decode([]byte(v))
-		if block == nil {
-			return fmt.Errorf("failed to parse certificate PEM")
-		}
-		cert, _ := x509.ParseCertificate(block.Bytes)
-		//if err != nil {
-		//	return fmt.Errorf("failed to parse certificate: " + err.Error())
-		//}
-
-		if cert != nil && (cert.SignatureAlgorithm == x509.SHA256WithRSA || cert.SignatureAlgorithm == x509.SHA1WithRSA) {
-			certSNList = append(certSNList, _getCertSN(cert))
-		}
+	c := Client{
+		AppId:              appId,
+		Charset:            "utf-8",
+		SignType:           SignTypeRSA2,
+		Format:             "json",
+		EncryptType:        EncryptTypeAes,
+		Signer:             signer,
+		isSandBox:          isSandBox,
+		alipayPublicKeyMap: make(map[string]*rsa.PublicKey),
 	}
 
-	c.alipayRootCertSN = strings.Join(certSNList, "_")
-	return nil
-}
-
-// 加载支付宝公钥证书
-func (c *Client) LoadAliPayPublicCert(b []byte) error {
-	block, _ := pem.Decode(b)
-	if block == nil {
-		return fmt.Errorf("failed to parse certificate PEM")
-	}
-
-	cert, err := x509.ParseCertificate(block.Bytes)
+	err = c.loadAppPubCertSN([]byte(appPubCert))
 	if err != nil {
-		return fmt.Errorf("failed to parse certificate: " + err.Error())
+		return nil, err
 	}
 
-	//key, ok := cert.PublicKey.(*rsa.PublicKey)
-	//if ok == false {
-	//	return nil
-	//}
+	err = c.loadAliPayRootCert([]byte(alipayRootCert))
+	if err != nil {
+		return nil, err
+	}
 
-	c.alipayPubCertSN = _getCertSN(cert)
-	return nil
+	err = c.loadAliPayPublicCert([]byte(alipayPubCert))
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
 
-func (p *Client) Execute(r request.Request, result response.Response) (string, error) {
+func (c *Client) Execute(r request.Request, result response.Response) (string, error) {
 	// 构造请求map请求
-	requestParams, err := p.getRequestHolderWithSign(r, "", "")
+	requestParams, err := c.getRequestHolderWithSign(r, "", "")
 	if err != nil {
 		return "", err
 	}
 
 	gateway := Gateway
-	if p.isSandBox {
+	if c.isSandBox {
 		gateway = SandboxGateway
 	}
 
@@ -136,23 +115,21 @@ func (p *Client) Execute(r request.Request, result response.Response) (string, e
 	}
 
 	if result.GetSign() != "" {
-		match, err := p.checkResponseSign(result.GetRawParams(), result.GetSign())
+		if result.GetAlipayCertSn() != "" {
+			_, err = c.checkCertResponseSign(result.GetAlipayCertSn(), result.GetRawParams(), result.GetSign(), result.IsSuccess())
+		} else {
+			_, err = c.checkResponseSign(result.GetRawParams(), result.GetSign())
+		}
+
 		if err != nil {
 			return "", err
 		}
-
-		if !match { // 签名不匹配
-			return "", fmt.Errorf("sign check fail: check Sign and Data Fail")
-		}
+		//if !match { // 签名不匹配
+		//	return "", fmt.Errorf("sign check fail: check Sign and Data Fail")
+		//}
 	}
 
 	return "", nil
-}
-
-// 获取证书的sn
-func _getCertSN(cert *x509.Certificate) string {
-	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
-	return hex.EncodeToString(value[:])
 }
 
 // 构造请求map
@@ -239,4 +216,84 @@ func (c *Client) checkResponseSign(sourceContent string, signature string) (bool
 	}
 
 	return c.SignChecker.Check(sourceContent, signature, c.SignType, c.Charset)
+}
+
+func (c *Client) checkCertResponseSign(sn string, sourceContent, signature string, responseIsSucess bool) (bool, error) {
+	k, ok := c.alipayPublicKeyMap[sn]
+	if !ok && responseIsSucess {
+		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
+	}
+
+	return NewSignCheckerWithPublicKey(k).Check(sourceContent, signature, c.SignType, c.Charset)
+}
+
+// 加载应用公钥证书sn
+func (c *Client) loadAppPubCertSN(b []byte) error {
+	block, _ := pem.Decode(b)
+	if block == nil {
+		return fmt.Errorf("failed to parse certificate PEM")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse certificate: " + err.Error())
+	}
+
+	c.appPubCertSN = _getCertSN(cert)
+	return nil
+}
+
+// 加载支付宝根证书sn
+func (c *Client) loadAliPayRootCert(b []byte) error {
+	var certStrList = strings.SplitAfter(string(b), "-----END CERTIFICATE-----")
+
+	var certSNList = make([]string, 0, len(certStrList))
+	for _, v := range certStrList {
+		if v == "" {
+			continue
+		}
+
+		block, _ := pem.Decode([]byte(v))
+		if block == nil {
+			return fmt.Errorf("failed to parse certificate PEM")
+		}
+		cert, _ := x509.ParseCertificate(block.Bytes)
+		//if err != nil {
+		//	return fmt.Errorf("failed to parse certificate: " + err.Error())
+		//}
+
+		if cert != nil && (cert.SignatureAlgorithm == x509.SHA256WithRSA || cert.SignatureAlgorithm == x509.SHA1WithRSA) {
+			certSNList = append(certSNList, _getCertSN(cert))
+		}
+	}
+
+	c.alipayRootCertSN = strings.Join(certSNList, "_")
+	return nil
+}
+
+// 加载支付宝公钥证书sn
+func (c *Client) loadAliPayPublicCert(b []byte) error {
+	block, _ := pem.Decode(b)
+	if block == nil {
+		return fmt.Errorf("failed to parse certificate PEM")
+	}
+
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse certificate: " + err.Error())
+	}
+
+	key, ok := cert.PublicKey.(*rsa.PublicKey)
+	if ok == false {
+		return fmt.Errorf("支付宝公钥证书类型错误，无法获取到public key")
+	}
+
+	c.alipayPubCertSN = _getCertSN(cert)
+	c.alipayPublicKeyMap[c.alipayPubCertSN] = key
+	return nil
+}
+
+// 获取证书的sn
+func _getCertSN(cert *x509.Certificate) string {
+	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
+	return hex.EncodeToString(value[:])
 }

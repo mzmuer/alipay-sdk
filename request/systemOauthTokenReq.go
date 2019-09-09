@@ -13,6 +13,10 @@ func (*SystemOauthTokenReq) GetMethod() string {
 
 func (r *SystemOauthTokenReq) GetTextParams() map[string]string {
 	m := r.UdfParams
+	if m == nil {
+		m = map[string]string{}
+	}
+
 	m["grant_type"] = r.GrantType
 	m["code"] = r.Code
 	m["refresh_token"] = r.RefreshToken

@@ -94,8 +94,20 @@ func NewCertClient(appId, privateKey, appPubCert, alipayRootCert, alipayPubCert 
 }
 
 func (c *Client) Execute(r request.Request, result response.Response) (string, error) {
+	return c._execute(r, result, "", "")
+}
+
+func (c *Client) ExecuteP1(r request.Request, result response.Response, accessToken string) (string, error) {
+	return c._execute(r, result, accessToken, "")
+}
+
+func (c *Client) ExecuteP2(r request.Request, result response.Response, accessToken, appAuthToken string) (string, error) {
+	return c._execute(r, result, accessToken, appAuthToken)
+}
+
+func (c *Client) _execute(r request.Request, result response.Response, accessToken, appAuthToken string) (string, error) {
 	// 构造请求map请求
-	requestParams, err := c.getRequestHolderWithSign(r, "", "")
+	requestParams, err := c.getRequestHolderWithSign(r, accessToken, appAuthToken)
 	if err != nil {
 		return "", err
 	}
@@ -110,6 +122,7 @@ func (c *Client) Execute(r request.Request, result response.Response) (string, e
 		return "", err
 	}
 
+	fmt.Println(string(b))
 	if err = response.ParseResponse(r.GetMethod(), b, result); err != nil {
 		return string(b), err
 	}

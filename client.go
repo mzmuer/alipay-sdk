@@ -75,17 +75,17 @@ func NewCertClient(appId, privateKey, appPubCert, alipayRootCert, alipayPubCert 
 		alipayPublicKeyMap: make(map[string]*rsa.PublicKey),
 	}
 
-	err = c.loadAppPubCertSN([]byte(appPubCert))
+	err = c.loadAppPubCertSN(appPubCert)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.loadAliPayRootCert([]byte(alipayRootCert))
+	err = c.loadAliPayRootCert(alipayRootCert)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.loadAliPayPublicCert([]byte(alipayPubCert))
+	err = c.loadAliPayPublicCert(alipayPubCert)
 	if err != nil {
 		return nil, err
 	}
@@ -241,8 +241,8 @@ func (c *Client) checkCertResponseSign(sn string, sourceContent, signature strin
 }
 
 // 加载应用公钥证书sn
-func (c *Client) loadAppPubCertSN(b []byte) error {
-	block, _ := pem.Decode(b)
+func (c *Client) loadAppPubCertSN(s string) error {
+	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
 	if block == nil {
 		return fmt.Errorf("failed to parse certificate PEM")
 	}
@@ -256,11 +256,12 @@ func (c *Client) loadAppPubCertSN(b []byte) error {
 }
 
 // 加载支付宝根证书sn
-func (c *Client) loadAliPayRootCert(b []byte) error {
-	var certStrList = strings.SplitAfter(string(b), "-----END CERTIFICATE-----")
+func (c *Client) loadAliPayRootCert(s string) error {
+	var certStrList = strings.SplitAfter(s, "-----END CERTIFICATE-----")
 
 	var certSNList = make([]string, 0, len(certStrList))
 	for _, v := range certStrList {
+		v = strings.TrimSpace(v)
 		if v == "" {
 			continue
 		}
@@ -284,8 +285,8 @@ func (c *Client) loadAliPayRootCert(b []byte) error {
 }
 
 // 加载支付宝公钥证书sn
-func (c *Client) loadAliPayPublicCert(b []byte) error {
-	block, _ := pem.Decode(b)
+func (c *Client) loadAliPayPublicCert(s string) error {
+	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
 	if block == nil {
 		return fmt.Errorf("failed to parse certificate PEM")
 	}

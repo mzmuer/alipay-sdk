@@ -122,7 +122,6 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 		return "", err
 	}
 
-	fmt.Println(string(b))
 	if err = response.ParseResponse(r.GetMethod(), b, result); err != nil {
 		return string(b), err
 	}
@@ -135,7 +134,7 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 		}
 
 		if err != nil {
-			return "", err
+			return string(b), err
 		}
 		//if !match { // 签名不匹配
 		//	return "", fmt.Errorf("sign check fail: check Sign and Data Fail")

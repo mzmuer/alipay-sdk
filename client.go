@@ -178,6 +178,11 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	params[ProdCode] = r.GetProdCode()
 
 	// app参数
+	// 必须先添加额外参数
+	for key, v := range r.GetTextParams() {
+		params[key] = v
+	}
+
 	if params[BizContentKey] == "" && r.GetBizModel() != nil {
 		bizContent, err := json.Marshal(r.GetBizModel())
 		if err != nil {
@@ -199,11 +204,6 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 
 	if appAuthToken != "" {
 		params[AppAuthToken] = appAuthToken
-	}
-
-	// 额外参数
-	for key, v := range r.GetTextParams() {
-		params[key] = v
 	}
 
 	// 签名 - 必选参数

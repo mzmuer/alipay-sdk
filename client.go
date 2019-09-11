@@ -128,9 +128,9 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 
 	if result.GetSign() != "" {
 		if result.GetAlipayCertSn() != "" {
-			_, err = c.checkCertResponseSign(result.GetAlipayCertSn(), result.GetRawParams(), result.GetSign(), result.IsSuccess())
+			_, err = c.checkCertResponseSign(result)
 		} else {
-			_, err = c.checkResponseSign(result.GetRawParams(), result.GetSign())
+			_, err = c.checkResponseSign(result)
 		}
 
 		if err != nil {
@@ -142,6 +142,62 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 	}
 
 	return "", nil
+}
+
+// 此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
+func (c *Client) RsaCheckV1(params map[string]string, charset, signType string) (bool, error) {
+	if c.SignChecker == nil {
+		return true, nil
+	}
+
+	sign := params["sign"]
+	delete(params, "sign")
+	delete(params, "sign_type")
+
+	return c.SignChecker.Check(getSignatureContent(params), sign, signType, charset)
+}
+
+// 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
+func (c *Client) RsaCheckV2(params map[string]string, charset, signType string) (bool, error) {
+	if c.SignChecker == nil {
+		return true, nil
+	}
+
+	sign := params["sign"]
+	delete(params, "sign")
+
+	return c.SignChecker.Check(getSignatureContent(params), sign, signType, charset)
+}
+
+// 此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
+func (c *Client) RsaCertCheckV1(params map[string]string, charset, signType string) (bool, error) {
+	sn := params["alipay_cert_sn"]
+
+	k, ok := c.alipayPublicKeyMap[sn]
+	if !ok && params["sub_code"] == "" {
+		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
+	}
+
+	sign := params["sign"]
+	delete(params, "sign")
+	delete(params, "sign_type")
+
+	return NewSignCheckerWithPublicKey(k).Check(getSignatureContent(params), sign, signType, charset)
+}
+
+// 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
+func (c *Client) RsaCertCheckV2(params map[string]string, charset, signType string) (bool, error) {
+	sn := params["alipay_cert_sn"]
+
+	k, ok := c.alipayPublicKeyMap[sn]
+	if !ok && params["sub_code"] == "" {
+		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
+	}
+
+	sign := params["sign"]
+	delete(params, "sign")
+
+	return NewSignCheckerWithPublicKey(k).Check(getSignatureContent(params), sign, signType, charset)
 }
 
 // 构造请求map
@@ -209,7 +265,7 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	// 签名 - 必选参数
 	if c.SignType != "" {
 		var err error
-		signContent := GetSignatureContent(params)
+		signContent := getSignatureContent(params)
 		params[Sign], err = c.Signer.Sign(signContent, c.SignType, c.Charset)
 		if err != nil {
 			return nil, err
@@ -222,32 +278,28 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 }
 
 // --
-func (c *Client) checkResponseSign(sourceContent string, signature string) (bool, error) {
+func (c *Client) checkResponseSign(resp response.Response) (bool, error) {
 	if c.SignChecker == nil {
 		return true, nil
 	}
 
-	return c.SignChecker.Check(sourceContent, signature, c.SignType, c.Charset)
+	return c.SignChecker.Check(resp.GetRawParams(), resp.GetSign(), c.SignType, c.Charset)
 }
 
-func (c *Client) checkCertResponseSign(sn string, sourceContent, signature string, responseIsSucess bool) (bool, error) {
-	k, ok := c.alipayPublicKeyMap[sn]
-	if !ok && responseIsSucess {
+func (c *Client) checkCertResponseSign(resp response.Response) (bool, error) {
+	k, ok := c.alipayPublicKeyMap[resp.GetAlipayCertSn()]
+	if !ok && resp.IsSuccess() {
 		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
 	}
 
-	return NewSignCheckerWithPublicKey(k).Check(sourceContent, signature, c.SignType, c.Charset)
+	return NewSignCheckerWithPublicKey(k).Check(resp.GetRawParams(), resp.GetSign(), c.SignType, c.Charset)
 }
 
 // 加载应用公钥证书sn
 func (c *Client) loadAppPubCertSN(s string) error {
-	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
-	if block == nil {
-		return fmt.Errorf("failed to parse certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
+	cert, err := parseCertificate(s)
 	if err != nil {
-		return fmt.Errorf("failed to parse certificate: " + err.Error())
+		return err
 	}
 
 	c.appPubCertSN = _getCertSN(cert)
@@ -256,9 +308,11 @@ func (c *Client) loadAppPubCertSN(s string) error {
 
 // 加载支付宝根证书sn
 func (c *Client) loadAliPayRootCert(s string) error {
-	var certStrList = strings.SplitAfter(s, "-----END CERTIFICATE-----")
+	var (
+		certStrList = strings.SplitAfter(s, "-----END CERTIFICATE-----")
+		certSNList  = make([]string, 0, len(certStrList))
+	)
 
-	var certSNList = make([]string, 0, len(certStrList))
 	for _, v := range certStrList {
 		v = strings.TrimSpace(v)
 		if v == "" {
@@ -269,10 +323,13 @@ func (c *Client) loadAliPayRootCert(s string) error {
 		if block == nil {
 			return fmt.Errorf("failed to parse certificate PEM")
 		}
-		cert, _ := x509.ParseCertificate(block.Bytes)
-		//if err != nil {
-		//	return fmt.Errorf("failed to parse certificate: " + err.Error())
-		//}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			// TODO: 暂时先忽略错误，第一个证书是sm2的椭圆曲线，go本身不支持
+			//fmt.Println(err)
+			//return fmt.Errorf("failed to parse certificate: " + err.Error())
+		}
 
 		if cert != nil && (cert.SignatureAlgorithm == x509.SHA256WithRSA || cert.SignatureAlgorithm == x509.SHA1WithRSA) {
 			certSNList = append(certSNList, _getCertSN(cert))
@@ -285,14 +342,9 @@ func (c *Client) loadAliPayRootCert(s string) error {
 
 // 加载支付宝公钥证书sn
 func (c *Client) loadAliPayPublicCert(s string) error {
-	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
-	if block == nil {
-		return fmt.Errorf("failed to parse certificate PEM")
-	}
-
-	cert, err := x509.ParseCertificate(block.Bytes)
+	cert, err := parseCertificate(s)
 	if err != nil {
-		return fmt.Errorf("failed to parse certificate: " + err.Error())
+		return err
 	}
 
 	key, ok := cert.PublicKey.(*rsa.PublicKey)

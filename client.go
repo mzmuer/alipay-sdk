@@ -266,12 +266,12 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	if c.SignType != "" {
 		var err error
 		signContent := getSignatureContent(params)
-		params[Sign], err = c.Signer.Sign(signContent, c.SignType, c.Charset)
+		params["sign"], err = c.Signer.Sign(signContent, c.SignType, c.Charset)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		params[Sign] = ""
+		params["sign"] = ""
 	}
 
 	return params, nil

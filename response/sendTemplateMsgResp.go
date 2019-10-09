@@ -1,6 +1,6 @@
 package response
 
-// 查询转账订单接口
+// 发送模板消息接口
 type SendTemplateMsgResp struct {
 	baseResponse
 }

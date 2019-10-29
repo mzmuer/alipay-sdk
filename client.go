@@ -3,7 +3,6 @@ package alipay
 import (
 	"crypto/md5"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/mzmuer/alipay-sdk/request"
 	"github.com/mzmuer/alipay-sdk/response"
+	"github.com/tjfoc/gmsm/sm2"
 )
 
 type Client struct {
@@ -324,14 +324,13 @@ func (c *Client) loadAliPayRootCert(s string) error {
 			return fmt.Errorf("failed to parse certificate PEM")
 		}
 
-		cert, err := x509.ParseCertificate(block.Bytes)
+		// TODO: 自己实现SM2国密
+		cert, err := sm2.ParseCertificate(block.Bytes)
 		if err != nil {
-			// TODO: 暂时先忽略错误，第一个证书是sm2的椭圆曲线，go本身不支持
-			//fmt.Println(err)
-			//return fmt.Errorf("failed to parse certificate: " + err.Error())
+			return fmt.Errorf("failed to parse certificate: " + err.Error())
 		}
 
-		if cert != nil && (cert.SignatureAlgorithm == x509.SHA256WithRSA || cert.SignatureAlgorithm == x509.SHA1WithRSA) {
+		if cert != nil && (cert.SignatureAlgorithm == sm2.SHA256WithRSA || cert.SignatureAlgorithm == sm2.SHA1WithRSA) {
 			certSNList = append(certSNList, _getCertSN(cert))
 		}
 	}
@@ -358,7 +357,7 @@ func (c *Client) loadAliPayPublicCert(s string) error {
 }
 
 // 获取证书的sn
-func _getCertSN(cert *x509.Certificate) string {
+func _getCertSN(cert *sm2.Certificate) string {
 	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
 	return hex.EncodeToString(value[:])
 }

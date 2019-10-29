@@ -2,11 +2,14 @@ package alipay
 
 import (
 	"bytes"
-	"crypto/x509"
+	"crypto/rsa"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"sort"
 	"strings"
+
+	"github.com/tjfoc/gmsm/sm2"
 )
 
 // 组成签名raw串
@@ -39,13 +42,13 @@ func getSignatureContent(m map[string]string) string {
 }
 
 // 解析证书
-func parseCertificate(s string) (*x509.Certificate, error) {
+func parseCertificate(s string) (*sm2.Certificate, error) {
 	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
 	if block == nil {
 		return nil, fmt.Errorf("failed to parse certificate PEM")
 	}
 
-	cert, err := x509.ParseCertificate(block.Bytes)
+	cert, err := sm2.ParseCertificate(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse certificate: " + err.Error())
 	}
@@ -56,59 +59,67 @@ func parseCertificate(s string) (*x509.Certificate, error) {
 // 公共的验签方法
 // 此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
 func RsaCheckV1(params map[string]string, publicKey, charset, signType string) (bool, error) {
-	signChecker, err := NewSignChecker([]byte(publicKey))
-	if err != nil {
-		return false, err
-	}
-
 	sign := params["sign"]
 	delete(params, "sign")
 	delete(params, "sign_type")
 
-	return signChecker.Check(getSignatureContent(params), sign, signType, charset)
+	return _rsaCheckV2(params, publicKey, charset, signType, sign)
 }
 
 // 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
 func RsaCheckV2(params map[string]string, publicKey, charset, signType string) (bool, error) {
+	sign := params["sign"]
+	delete(params, "sign")
+
+	return _rsaCheckV2(params, publicKey, charset, signType, sign)
+}
+
+func _rsaCheckV2(params map[string]string, publicKey, charset, signType, sign string) (bool, error) {
 	signChecker, err := NewSignChecker([]byte(publicKey))
 	if err != nil {
 		return false, err
 	}
 
-	sign := params["sign"]
-	delete(params, "sign")
-
 	return signChecker.Check(getSignatureContent(params), sign, signType, charset)
 }
 
-// TODO: 公钥证书验签，等sm2椭圆曲线先解决 --
-// 此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
-//func RsaCertCheckV1(params map[string]string, alipayPublicCertPath, charset, signType string) (bool, error) {
-//	sn := params["alipay_cert_sn"]
-//
-//	k, ok := c.alipayPublicKeyMap[sn]
-//	if !ok && params["sub_code"] == "" {
-//		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
-//	}
-//
-//	sign := params["sign"]
-//	delete(params, "sign")
-//	delete(params, "sign_type")
-//
-//	return NewSignCheckerWithPublicKey(k).Check(getSignatureContent(params), sign, signType, charset)
-//}
-//
-//// 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
-//func RsaCertCheckV2(params map[string]string, alipayPublicCertPath, charset, signType string) (bool, error) {
-//	sn := params["alipay_cert_sn"]
-//
-//	k, ok := c.alipayPublicKeyMap[sn]
-//	if !ok && params["sub_code"] == "" {
-//		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
-//	}
-//
-//	sign := params["sign"]
-//	delete(params, "sign")
-//
-//	return NewSignCheckerWithPublicKey(k).Check(getSignatureContent(params), sign, signType, charset)
-//}
+//此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
+func RsaCertCheckV1(params map[string]string, alipayPublicCertPath, charset, signType string) (bool, error) {
+	sign := params["sign"]
+	delete(params, "sign")
+	delete(params, "sign_type")
+
+	return _rsaCertCheck(params, alipayPublicCertPath, charset, signType, sign)
+}
+
+// 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
+func RsaCertCheckV2(params map[string]string, alipayPublicCertPath, charset, signType string) (bool, error) {
+	sign := params["sign"]
+	delete(params, "sign")
+
+	return _rsaCertCheck(params, alipayPublicCertPath, charset, signType, sign)
+}
+
+// --
+func _rsaCertCheck(params map[string]string, alipayPublicCertPath, charset, signType, sign string) (bool, error) {
+	b, err := ioutil.ReadFile(alipayPublicCertPath)
+	if err != nil {
+		return false, err
+	}
+
+	cert, err := parseCertificate(string(b))
+	if err != nil {
+		return false, err
+	}
+
+	if params["alipay_cert_sn"] != _getCertSN(cert) {
+		return false, fmt.Errorf("支付宝公钥证书SN不匹配")
+	}
+
+	key, ok := cert.PublicKey.(*rsa.PublicKey)
+	if ok == false {
+		return false, fmt.Errorf("支付宝公钥证书类型错误，无法获取到public key")
+	}
+
+	return NewSignCheckerWithPublicKey(key).Check(getSignatureContent(params), sign, signType, charset)
+}

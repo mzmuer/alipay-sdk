@@ -1,9 +1,7 @@
 package alipay
 
 import (
-	"crypto/md5"
 	"crypto/rsa"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -12,6 +10,8 @@ import (
 
 	"github.com/mzmuer/alipay-sdk/request"
 	"github.com/mzmuer/alipay-sdk/response"
+	"github.com/mzmuer/alipay-sdk/signature"
+	"github.com/mzmuer/alipay-sdk/utils"
 	"github.com/tjfoc/gmsm/sm2"
 )
 
@@ -19,8 +19,8 @@ type Client struct {
 	AppId       string
 	Charset     string // utf-8
 	SignType    string // RSA2
-	Signer      *signer
-	SignChecker *signChecker
+	Signer      *signature.Signer
+	SignChecker *signature.SignChecker
 	Format      string // json
 	EncryptType string // AES
 
@@ -34,12 +34,12 @@ type Client struct {
 }
 
 func NewClient(appId string, publicKey, privateKey string, isSandBox bool) (*Client, error) {
-	signChecker, err := NewSignChecker([]byte(publicKey))
+	signChecker, err := signature.NewSignChecker([]byte(publicKey))
 	if err != nil {
 		return nil, err
 	}
 
-	signer, err := NewSigner([]byte(privateKey))
+	signer, err := signature.NewSigner([]byte(privateKey))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func NewClient(appId string, publicKey, privateKey string, isSandBox bool) (*Cli
 }
 
 func NewCertClient(appId, privateKey, appPubCert, alipayRootCert, alipayPubCert string, isSandBox bool) (*Client, error) {
-	signer, err := NewSigner([]byte(privateKey))
+	signer, err := signature.NewSigner([]byte(privateKey))
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +119,11 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 
 	var b []byte
 	if uRequest, ok := r.(request.UploadRequest); ok {
-		if b, err = doPostUploadFile(gateway, requestParams, uRequest.GetFileParams()); err != nil {
+		if b, err = utils.DoPostUploadFile(gateway, requestParams, uRequest.GetFileParams()); err != nil {
 			return "", err
 		}
 	} else {
-		if b, err = doPost(gateway, requestParams); err != nil {
+		if b, err = utils.DoPost(gateway, requestParams); err != nil {
 			return "", err
 		}
 	}
@@ -160,7 +160,7 @@ func (c *Client) RsaCheckV1(params map[string]string, charset, signType string) 
 	delete(params, "sign")
 	delete(params, "sign_type")
 
-	return c.SignChecker.Check(getSignatureContent(params), sign, signType, charset)
+	return c.SignChecker.Check(utils.GetSignatureContent(params), sign, signType, charset)
 }
 
 // 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
@@ -172,7 +172,7 @@ func (c *Client) RsaCheckV2(params map[string]string, charset, signType string) 
 	sign := params["sign"]
 	delete(params, "sign")
 
-	return c.SignChecker.Check(getSignatureContent(params), sign, signType, charset)
+	return c.SignChecker.Check(utils.GetSignatureContent(params), sign, signType, charset)
 }
 
 // 此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
@@ -184,11 +184,11 @@ func (c *Client) RsaCertCheckV1(params map[string]string, charset, signType stri
 		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
 	}
 
-	sign := params["sign"]
+	pSign := params["sign"]
 	delete(params, "sign")
 	delete(params, "sign_type")
 
-	return NewSignCheckerWithPublicKey(k).Check(getSignatureContent(params), sign, signType, charset)
+	return signature.NewSignCheckerWithPublicKey(k).Check(utils.GetSignatureContent(params), pSign, signType, charset)
 }
 
 // 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
@@ -200,10 +200,10 @@ func (c *Client) RsaCertCheckV2(params map[string]string, charset, signType stri
 		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
 	}
 
-	sign := params["sign"]
+	pSign := params["sign"]
 	delete(params, "sign")
 
-	return NewSignCheckerWithPublicKey(k).Check(getSignatureContent(params), sign, signType, charset)
+	return signature.NewSignCheckerWithPublicKey(k).Check(utils.GetSignatureContent(params), pSign, signType, charset)
 }
 
 // 构造请求map
@@ -271,7 +271,7 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	// 签名 - 必选参数
 	if c.SignType != "" {
 		var err error
-		signContent := getSignatureContent(params)
+		signContent := utils.GetSignatureContent(params)
 		params["sign"], err = c.Signer.Sign(signContent, c.SignType, c.Charset)
 		if err != nil {
 			return nil, err
@@ -298,17 +298,17 @@ func (c *Client) checkCertResponseSign(resp response.Response) (bool, error) {
 		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
 	}
 
-	return NewSignCheckerWithPublicKey(k).Check(resp.GetRawParams(), resp.GetSign(), c.SignType, c.Charset)
+	return signature.NewSignCheckerWithPublicKey(k).Check(resp.GetRawParams(), resp.GetSign(), c.SignType, c.Charset)
 }
 
 // 加载应用公钥证书sn
 func (c *Client) loadAppPubCertSN(s string) error {
-	cert, err := parseCertificate(s)
+	cert, err := utils.ParseCertificate(s)
 	if err != nil {
 		return err
 	}
 
-	c.appPubCertSN = _getCertSN(cert)
+	c.appPubCertSN = utils.GetCertSN(cert)
 	return nil
 }
 
@@ -337,7 +337,7 @@ func (c *Client) loadAliPayRootCert(s string) error {
 		}
 
 		if cert != nil && (cert.SignatureAlgorithm == sm2.SHA256WithRSA || cert.SignatureAlgorithm == sm2.SHA1WithRSA) {
-			certSNList = append(certSNList, _getCertSN(cert))
+			certSNList = append(certSNList, utils.GetCertSN(cert))
 		}
 	}
 
@@ -347,7 +347,7 @@ func (c *Client) loadAliPayRootCert(s string) error {
 
 // 加载支付宝公钥证书sn
 func (c *Client) loadAliPayPublicCert(s string) error {
-	cert, err := parseCertificate(s)
+	cert, err := utils.ParseCertificate(s)
 	if err != nil {
 		return err
 	}
@@ -357,13 +357,7 @@ func (c *Client) loadAliPayPublicCert(s string) error {
 		return fmt.Errorf("支付宝公钥证书类型错误，无法获取到public key")
 	}
 
-	c.alipayPubCertSN = _getCertSN(cert)
+	c.alipayPubCertSN = utils.GetCertSN(cert)
 	c.alipayPublicKeyMap[c.alipayPubCertSN] = key
 	return nil
-}
-
-// 获取证书的sn
-func _getCertSN(cert *sm2.Certificate) string {
-	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
-	return hex.EncodeToString(value[:])
 }

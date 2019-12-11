@@ -1,4 +1,4 @@
-package alipay
+package utils
 
 import (
 	"bytes"
@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mzmuer/alipay-sdk/utils"
+	"github.com/mzmuer/alipay-sdk"
 )
 
-func doPost(postUrl string, m map[string]string) ([]byte, error) {
+func DoPost(postUrl string, m map[string]string) ([]byte, error) {
 	var (
-		cType = "application/x-www-form-urlencoded;charset=" + m[Charset]
+		cType = "application/x-www-form-urlencoded;charset=" + m[alipay.Charset]
 		query = _buildQuery(m)
 	)
 
@@ -28,9 +28,9 @@ func doPost(postUrl string, m map[string]string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func doPostUploadFile(postUrl string, m map[string]string, fileParams map[string]*utils.FileItem) ([]byte, error) {
+func DoPostUploadFile(postUrl string, m map[string]string, fileParams map[string]*FileItem) ([]byte, error) {
 	if fileParams == nil || len(fileParams) == 0 {
-		return doPost(postUrl, m)
+		return DoPost(postUrl, m)
 	}
 
 	body := &bytes.Buffer{}
@@ -61,7 +61,7 @@ func doPostUploadFile(postUrl string, m map[string]string, fileParams map[string
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", writer.FormDataContentType()+" ;charset="+m[Charset])
+	req.Header.Set("Content-Type", writer.FormDataContentType()+" ;charset="+m[alipay.Charset])
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

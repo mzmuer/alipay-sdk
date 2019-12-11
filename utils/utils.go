@@ -1,19 +1,22 @@
-package alipay
+package utils
 
 import (
 	"bytes"
+	"crypto/md5"
 	"crypto/rsa"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"sort"
 	"strings"
 
+	"github.com/mzmuer/alipay-sdk/signature"
 	"github.com/tjfoc/gmsm/sm2"
 )
 
 // 组成签名raw串
-func getSignatureContent(m map[string]string) string {
+func GetSignatureContent(m map[string]string) string {
 	keys := make([]string, 0, len(m))
 
 	for key := range m {
@@ -42,7 +45,7 @@ func getSignatureContent(m map[string]string) string {
 }
 
 // 解析证书
-func parseCertificate(s string) (*sm2.Certificate, error) {
+func ParseCertificate(s string) (*sm2.Certificate, error) {
 	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
 	if block == nil {
 		return nil, fmt.Errorf("failed to parse certificate PEM")
@@ -75,7 +78,7 @@ func RsaCheckV2(params map[string]string, publicKey, charset, signType string) (
 }
 
 func _rsaCheckV2(params map[string]string, publicKey, charset, signType, sign string) (bool, error) {
-	signChecker, err := NewSignChecker([]byte(publicKey))
+	signChecker, err := sign2.NewSignChecker([]byte(publicKey))
 	if err != nil {
 		return false, err
 	}
@@ -112,7 +115,7 @@ func _rsaCertCheck(params map[string]string, alipayPublicCertPath, charset, sign
 		return false, err
 	}
 
-	if params["alipay_cert_sn"] != _getCertSN(cert) {
+	if params["alipay_cert_sn"] != getCertSN(cert) {
 		return false, fmt.Errorf("支付宝公钥证书SN不匹配")
 	}
 
@@ -121,5 +124,11 @@ func _rsaCertCheck(params map[string]string, alipayPublicCertPath, charset, sign
 		return false, fmt.Errorf("支付宝公钥证书类型错误，无法获取到public key")
 	}
 
-	return NewSignCheckerWithPublicKey(key).Check(getSignatureContent(params), sign, signType, charset)
+	return sign2.NewSignCheckerWithPublicKey(key).Check(getSignatureContent(params), sign, signType, charset)
+}
+
+// 获取证书的sn
+func GetCertSN(cert *sm2.Certificate) string {
+	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
+	return hex.EncodeToString(value[:])
 }

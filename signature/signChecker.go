@@ -1,4 +1,4 @@
-package alipay
+package signature
 
 import (
 	"crypto"
@@ -7,26 +7,28 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+
+	"github.com/mzmuer/alipay-sdk"
 )
 
-type signChecker struct {
+type SignChecker struct {
 	PublicKey *rsa.PublicKey
 }
 
-func NewSignChecker(publicKey []byte) (*signChecker, error) {
+func NewSignChecker(publicKey []byte) (*SignChecker, error) {
 	pubKey, err := _genPubKey(publicKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return &signChecker{PublicKey: pubKey}, err
+	return &SignChecker{PublicKey: pubKey}, err
 }
 
-func NewSignCheckerWithPublicKey(k *rsa.PublicKey) *signChecker {
-	return &signChecker{PublicKey: k}
+func NewSignCheckerWithPublicKey(k *rsa.PublicKey) *SignChecker {
+	return &SignChecker{PublicKey: k}
 }
 
-func (s *signChecker) Check(sourceContent string, signature string, signType string, charset string) (bool, error) {
+func (s *SignChecker) Check(sourceContent string, signature string, signType string, charset string) (bool, error) {
 	decoded, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return false, err
@@ -35,9 +37,9 @@ func (s *signChecker) Check(sourceContent string, signature string, signType str
 	h := sha256.New()
 	h.Write([]byte(sourceContent))
 
-	if signType == SignTypeRSA2 {
+	if signType == alipay.SignTypeRSA2 {
 		err = rsa.VerifyPKCS1v15(s.PublicKey, crypto.SHA256, h.Sum(nil), decoded)
-	} else if signType == SignTypeRSA {
+	} else if signType == alipay.SignTypeRSA {
 		err = rsa.VerifyPKCS1v15(s.PublicKey, crypto.SHA1, h.Sum(nil), decoded)
 	}
 

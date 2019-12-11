@@ -17,6 +17,7 @@ func NewFileItem(filePath string) (*FileItem, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	b, err := ioutil.ReadAll(f)
 	if err != nil {

@@ -42,7 +42,7 @@ func doPostUploadFile(postUrl string, m map[string]string, fileParams map[string
 			return nil, err
 		}
 
-		_, err = io.Copy(part, bytes.NewReader(file.Content))
+		_, err = io.Copy(part, file.Content)
 		if err != nil {
 			return nil, err
 		}

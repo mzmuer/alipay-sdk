@@ -1,34 +1,22 @@
 package utils
 
 import (
-	"io/ioutil"
-	"os"
+	"io"
 )
 
 type FileItem struct {
 	FileName string
 	MimeType string
-	Content  []byte
+	Content  io.Reader
 }
 
 // --
-func NewFileItem(filePath string) (*FileItem, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-
+func NewFileItem(fileName string, r io.Reader, mimeType string) *FileItem {
 	return &FileItem{
-		FileName: f.Name(),
-		MimeType: "",
-		Content:  b,
-	}, nil
+		FileName: fileName,
+		MimeType: mimeType,
+		Content:  r,
+	}
 }
 
 // --- TODO:

@@ -1,5 +1,7 @@
 package request
 
+import "github.com/mzmuer/alipay-sdk/utils"
+
 type Request interface {
 	GetMethod() string
 	GetNotifyUrl() string
@@ -11,6 +13,10 @@ type Request interface {
 	GetNeedEncrypt() bool
 	GetTextParams() map[string]string
 	GetBizModel() interface{}
+}
+
+type UploadRequest interface {
+	GetFileParams() map[string]*utils.FileItem
 }
 
 type (

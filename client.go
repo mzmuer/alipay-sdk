@@ -117,9 +117,15 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 		gateway = SandboxGateway
 	}
 
-	b, err := doPost(gateway, requestParams)
-	if err != nil {
-		return "", err
+	var b []byte
+	if uRequest, ok := r.(request.UploadRequest); ok {
+		if b, err = doPostUploadFile(gateway, requestParams, uRequest.GetFileParams()); err != nil {
+			return "", err
+		}
+	} else {
+		if b, err = doPost(gateway, requestParams); err != nil {
+			return "", err
+		}
 	}
 
 	if err = response.ParseResponse(r.GetMethod(), b, result); err != nil {

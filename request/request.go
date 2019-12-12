@@ -21,7 +21,7 @@ type UploadRequest interface {
 
 type (
 	// 请求结构
-	baseRequest struct {
+	BaseRequest struct {
 		Method       string // 请求方法
 		NotifyUrl    string
 		ReturnUrl    string
@@ -37,46 +37,46 @@ type (
 )
 
 // 获取API名称。
-func (*baseRequest) GetMethod() string {
+func (*BaseRequest) GetMethod() string {
 	return "undefined methods"
 }
 
 // 返回通知地址
-func (r *baseRequest) GetNotifyUrl() string {
+func (r *BaseRequest) GetNotifyUrl() string {
 	return r.NotifyUrl
 }
 
 // 返回回跳地址
-func (r *baseRequest) GetReturnUrl() string {
+func (r *BaseRequest) GetReturnUrl() string {
 	return r.ReturnUrl
 }
 
 // 获取产品码
-func (r *baseRequest) GetProdCode() string {
+func (r *BaseRequest) GetProdCode() string {
 	return r.ProdCode
 }
 
 // 获取终端类型
-func (r *baseRequest) GetTerminalType() string {
+func (r *BaseRequest) GetTerminalType() string {
 	return r.TerminalType
 }
 
 // 获取终端信息
-func (r *baseRequest) GetTerminalInfo() string {
+func (r *BaseRequest) GetTerminalInfo() string {
 	return r.TerminalInfo
 }
 
-func (r *baseRequest) GetApiVersion() string {
+func (r *BaseRequest) GetApiVersion() string {
 	return "1.0"
 }
 
 // 判断是否需要加密
-func (r *baseRequest) GetNeedEncrypt() bool {
+func (r *BaseRequest) GetNeedEncrypt() bool {
 	return r.NeedEncrypt
 }
 
 // 获取所有的Key-Value形式的文本请求参数集合
-func (r *baseRequest) GetTextParams() map[string]string {
+func (r *BaseRequest) GetTextParams() map[string]string {
 	m := r.UdfParams
 	if m == nil {
 		m = map[string]string{}
@@ -85,7 +85,7 @@ func (r *baseRequest) GetTextParams() map[string]string {
 	return m
 }
 
-func (r *baseRequest) GetBizModel() interface{} {
+func (r *BaseRequest) GetBizModel() interface{} {
 	return r.BizModel
 }
 

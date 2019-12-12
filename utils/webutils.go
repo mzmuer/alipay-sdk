@@ -96,7 +96,7 @@ func _getFileEntry(writer *multipart.Writer, fieldName string, file *FileItem) e
 	h.Set("Content-Disposition",
 		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
 			quoteEscaper.Replace(fieldName), quoteEscaper.Replace(file.GetFileName())))
-	h.Set("Content-Type", file.GetMimeType())
+	h.Set("Content-Type", file.GetMIMEType())
 
 	part, err := writer.CreatePart(h)
 	if err != nil {

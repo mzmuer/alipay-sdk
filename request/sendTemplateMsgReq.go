@@ -2,7 +2,7 @@ package request
 
 // 发送模板消息接口
 type (
-	SendTemplateMsgReq struct{ baseRequest }
+	SendTemplateMsgReq struct{ BaseRequest }
 
 	SendTemplateMsgBizModel struct {
 		ToUserId       string                       `json:"to_user_id"`

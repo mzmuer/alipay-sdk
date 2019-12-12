@@ -6,14 +6,14 @@ import (
 )
 
 // TODO: 自定义json解析
-type baseResponse struct {
+type BaseResponse struct {
 	Code         string `json:"code"`     // 网关返回码
 	Msg          string `json:"msg"`      // 网关返回码描述
 	SubCode      string `json:"sub_code"` // 业务返回码
 	SubMsg       string `json:"sub_msg"`  // 业务返回码描述
-	AlipayCertSn string `json:"-"`        // 公钥证书sn
-	RawResp      string `json:"-"`        // 原始响应内容，签名验证需要
-	Sign         string `json:"-"`        // 签名
+	alipayCertSn string `json:"-"`        // 公钥证书sn
+	rawResp      string `json:"-"`        // 原始响应内容，签名验证需要
+	sign         string `json:"-"`        // 签名
 }
 
 type Response interface {
@@ -27,39 +27,39 @@ type Response interface {
 	GetAlipayCertSn() string
 }
 
-func (r *baseResponse) GetSubCode() string {
+func (r *BaseResponse) GetSubCode() string {
 	return r.SubCode
 }
 
-func (r *baseResponse) IsSuccess() bool {
+func (r *BaseResponse) IsSuccess() bool {
 	return r.SubCode == ""
 }
 
-func (r *baseResponse) GetSign() string {
-	return r.Sign
+func (r *BaseResponse) GetSign() string {
+	return r.sign
 }
 
-func (r *baseResponse) SetSign(sign string) {
-	r.Sign = sign
+func (r *BaseResponse) SetSign(sign string) {
+	r.sign = sign
 }
 
-func (r *baseResponse) GetRawParams() string {
-	return r.RawResp
+func (r *BaseResponse) GetRawParams() string {
+	return r.rawResp
 }
 
-func (r *baseResponse) SetRawParams(raw string) {
-	r.RawResp = raw
+func (r *BaseResponse) SetRawParams(raw string) {
+	r.rawResp = raw
 }
 
-func (r *baseResponse) SetAlipayCertSn(sn string) {
-	r.AlipayCertSn = sn
+func (r *BaseResponse) SetAlipayCertSn(sn string) {
+	r.alipayCertSn = sn
 }
 
-func (r *baseResponse) GetAlipayCertSn() string {
-	return r.AlipayCertSn
+func (r *BaseResponse) GetAlipayCertSn() string {
+	return r.alipayCertSn
 }
 
-// ----
+
 func ParseResponse(method string, data []byte, result Response) error {
 	var (
 		jsonKey = strings.ReplaceAll(method, ".", "_") + "_response"

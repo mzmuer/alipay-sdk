@@ -2,7 +2,7 @@ package response
 
 // 换取授权访问令牌
 type SystemOauthTokenResp struct {
-	baseResponse
+	BaseResponse
 	UserId       string `json:"user_id"`        // 支付宝用户的唯一userId
 	AlipayUserId string `json:"alipay_user_id"` // 支付宝开放平台唯一id
 	AccessToken  string `json:"access_token"`   // 访问令牌。通过该令牌调用需要授权类接口

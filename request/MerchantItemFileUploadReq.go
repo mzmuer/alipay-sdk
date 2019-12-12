@@ -6,7 +6,7 @@ import (
 
 // 商品文件上传接口
 type MerchantItemFileUploadReq struct {
-	baseRequest
+	BaseRequest
 	Scene       string          `json:"scene"`        // 业务场景描述，比如订单信息同步场景对应SYNC_ORDER
 	FileContent *utils.FileItem `json:"file_content"` // 文件二进制字节流，最大为4M
 }

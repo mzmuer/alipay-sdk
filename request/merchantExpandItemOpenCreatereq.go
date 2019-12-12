@@ -1,6 +1,7 @@
 package request
 
 // 创建商品接口
+// https://docs.open.alipay.com/api_4/ant.merchant.expand.item.open.create/
 type (
 	MerchantExpandItemOpenCreateReq struct {
 		BaseRequest
@@ -27,7 +28,7 @@ type (
 		PropertyValueList []string `json:"property_value_list"`
 	}
 
-	MerchantExpandItemOpenBizModel struct {
+	MerchantExpandItemOpenCreateBizModel struct {
 		Scene              string               `json:"scene"`
 		TargetId           string               `json:"target_id"`
 		TargetType         string               `json:"target_type"` //8-小程序

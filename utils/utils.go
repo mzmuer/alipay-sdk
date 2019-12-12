@@ -8,12 +8,31 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/mzmuer/alipay-sdk/signature"
 	"github.com/tjfoc/gmsm/sm2"
 )
+
+var (
+	rander = rand.New(rand.NewSource(time.Now().UnixNano()))
+)
+
+func RandomString(ln int) string {
+	letters := []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	lettersLength := len(letters)
+
+	result := make([]rune, ln)
+
+	for i := range result {
+		result[i] = letters[rander.Intn(lettersLength)]
+	}
+
+	return string(result)
+}
 
 // 组成签名raw串
 func GetSignatureContent(m map[string]string) string {
@@ -78,12 +97,12 @@ func RsaCheckV2(params map[string]string, publicKey, charset, signType string) (
 }
 
 func _rsaCheckV2(params map[string]string, publicKey, charset, signType, sign string) (bool, error) {
-	signChecker, err := sign2.NewSignChecker([]byte(publicKey))
+	signChecker, err := signature.NewSignChecker([]byte(publicKey))
 	if err != nil {
 		return false, err
 	}
 
-	return signChecker.Check(getSignatureContent(params), sign, signType, charset)
+	return signChecker.Check(GetSignatureContent(params), sign, signType, charset)
 }
 
 //此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
@@ -110,12 +129,12 @@ func _rsaCertCheck(params map[string]string, alipayPublicCertPath, charset, sign
 		return false, err
 	}
 
-	cert, err := parseCertificate(string(b))
+	cert, err := ParseCertificate(string(b))
 	if err != nil {
 		return false, err
 	}
 
-	if params["alipay_cert_sn"] != getCertSN(cert) {
+	if params["alipay_cert_sn"] != GetCertSN(cert) {
 		return false, fmt.Errorf("支付宝公钥证书SN不匹配")
 	}
 
@@ -124,7 +143,7 @@ func _rsaCertCheck(params map[string]string, alipayPublicCertPath, charset, sign
 		return false, fmt.Errorf("支付宝公钥证书类型错误，无法获取到public key")
 	}
 
-	return sign2.NewSignCheckerWithPublicKey(key).Check(getSignatureContent(params), sign, signType, charset)
+	return signature.NewSignCheckerWithPublicKey(key).Check(GetSignatureContent(params), sign, signType, charset)
 }
 
 // 获取证书的sn

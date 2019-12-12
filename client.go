@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mzmuer/alipay-sdk/constant"
 	"github.com/mzmuer/alipay-sdk/request"
 	"github.com/mzmuer/alipay-sdk/response"
 	"github.com/mzmuer/alipay-sdk/signature"
@@ -48,9 +49,9 @@ func NewClient(appId string, publicKey, privateKey string, isSandBox bool) (*Cli
 		AppId:       appId,
 		Charset:     "utf-8",
 		SignChecker: signChecker,
-		SignType:    SignTypeRSA2,
+		SignType:    constant.SignTypeRSA2,
 		Format:      "json",
-		EncryptType: EncryptTypeAes,
+		EncryptType: constant.EncryptTypeAes,
 		Signer:      signer,
 		isSandBox:   isSandBox,
 	}
@@ -67,9 +68,9 @@ func NewCertClient(appId, privateKey, appPubCert, alipayRootCert, alipayPubCert 
 	c := Client{
 		AppId:              appId,
 		Charset:            "utf-8",
-		SignType:           SignTypeRSA2,
+		SignType:           constant.SignTypeRSA2,
 		Format:             "json",
-		EncryptType:        EncryptTypeAes,
+		EncryptType:        constant.EncryptTypeAes,
 		Signer:             signer,
 		isSandBox:          isSandBox,
 		alipayPublicKeyMap: make(map[string]*rsa.PublicKey),
@@ -112,9 +113,9 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 		return "", err
 	}
 
-	gateway := Gateway
+	gateway := constant.Gateway
 	if c.isSandBox {
-		gateway = SandboxGateway
+		gateway = constant.SandboxGateway
 	}
 
 	var b []byte
@@ -211,33 +212,33 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	params := map[string]string{}
 
 	// 必选参数
-	params[Method] = r.GetMethod()
-	params[Version] = r.GetApiVersion()
-	params[AppId] = c.AppId
-	params[SignType] = c.SignType
-	params[TerminalType] = r.GetTerminalType()
-	params[TerminalInfo] = r.GetTerminalInfo()
-	params[NotifyUrl] = r.GetNotifyUrl()
-	params[ReturnUrl] = r.GetReturnUrl()
-	params[Charset] = c.Charset
-	params[Timestamp] = time.Now().Format("2006-01-02 15:03:04")
+	params[constant.Method] = r.GetMethod()
+	params[constant.Version] = r.GetApiVersion()
+	params[constant.AppId] = c.AppId
+	params[constant.SignType] = c.SignType
+	params[constant.TerminalType] = r.GetTerminalType()
+	params[constant.TerminalInfo] = r.GetTerminalInfo()
+	params[constant.NotifyUrl] = r.GetNotifyUrl()
+	params[constant.ReturnUrl] = r.GetReturnUrl()
+	params[constant.Charset] = c.Charset
+	params[constant.Timestamp] = time.Now().Format("2006-01-02 15:03:04")
 	if r.GetNeedEncrypt() {
-		params[EncryptType] = c.EncryptType
+		params[constant.EncryptType] = c.EncryptType
 	}
 
 	if c.appPubCertSN != "" {
-		params[AppCertSn] = c.appPubCertSN
+		params[constant.AppCertSn] = c.appPubCertSN
 	}
 
 	if c.alipayRootCertSN != "" {
-		params[AlipayRootCertSn] = c.alipayRootCertSN
+		params[constant.AlipayRootCertSn] = c.alipayRootCertSN
 	}
 
 	// 可选参数
-	params[Format] = c.Format
-	params[AccessToken] = accessToken
-	params[AlipaySdk] = SdkVersion
-	params[ProdCode] = r.GetProdCode()
+	params[constant.Format] = c.Format
+	params[constant.AccessToken] = accessToken
+	params[constant.AlipaySdk] = constant.SdkVersion
+	params[constant.ProdCode] = r.GetProdCode()
 
 	// app参数
 	// 必须先添加额外参数
@@ -245,13 +246,13 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 		params[key] = v
 	}
 
-	if params[BizContentKey] == "" && r.GetBizModel() != nil {
+	if params[constant.BizContentKey] == "" && r.GetBizModel() != nil {
 		bizContent, err := json.Marshal(r.GetBizModel())
 		if err != nil {
 			return nil, err
 		}
 
-		params[BizContentKey] = string(bizContent)
+		params[constant.BizContentKey] = string(bizContent)
 	}
 
 	if r.GetNeedEncrypt() {
@@ -259,13 +260,13 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 			return nil, fmt.Errorf("加密类型错误")
 		}
 
-		params[EncryptType] = c.EncryptType
+		params[constant.EncryptType] = c.EncryptType
 		// TODO: 对r.BizContent一波加密操作
 		// params[BizContentKey] = encryptContent
 	}
 
 	if appAuthToken != "" {
-		params[AppAuthToken] = appAuthToken
+		params[constant.AppAuthToken] = appAuthToken
 	}
 
 	// 签名 - 必选参数

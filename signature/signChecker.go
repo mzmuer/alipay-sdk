@@ -8,7 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/mzmuer/alipay-sdk"
+	"github.com/mzmuer/alipay-sdk/constant"
 )
 
 type SignChecker struct {
@@ -37,9 +37,9 @@ func (s *SignChecker) Check(sourceContent string, signature string, signType str
 	h := sha256.New()
 	h.Write([]byte(sourceContent))
 
-	if signType == alipay.SignTypeRSA2 {
+	if signType == constant.SignTypeRSA2 {
 		err = rsa.VerifyPKCS1v15(s.PublicKey, crypto.SHA256, h.Sum(nil), decoded)
-	} else if signType == alipay.SignTypeRSA {
+	} else if signType == constant.SignTypeRSA {
 		err = rsa.VerifyPKCS1v15(s.PublicKey, crypto.SHA1, h.Sum(nil), decoded)
 	}
 

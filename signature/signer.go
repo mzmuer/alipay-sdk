@@ -10,7 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/mzmuer/alipay-sdk"
+	"github.com/mzmuer/alipay-sdk/constant"
 )
 
 type Signer struct {
@@ -38,12 +38,12 @@ func (s *Signer) Sign(sourceContent string, signType string, charset string) (st
 		err    error
 	)
 
-	if signType == alipay.SignTypeRSA2 {
+	if signType == constant.SignTypeRSA2 {
 		signed, err = rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hashed[:])
 		if err != nil {
 			return "", err
 		}
-	} else if signType == alipay.SignTypeRSA {
+	} else if signType == constant.SignTypeRSA {
 		signed, err = rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA1, hashed[:])
 		if err != nil {
 			return "", err

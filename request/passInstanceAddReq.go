@@ -2,7 +2,7 @@ package request
 
 // 卡券实例发放接口
 type (
-	PassInstanceAddReq struct{ baseRequest }
+	PassInstanceAddReq struct{ BaseRequest }
 
 	PassInstanceAddBizModel struct {
 		TplId           string `json:"tpl_id"`           // 支付宝pass模版ID，即调用模板创建接口时返回的tpl_id。

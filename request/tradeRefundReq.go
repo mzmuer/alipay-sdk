@@ -2,7 +2,7 @@ package request
 
 // 统一收单交易退款接口
 type (
-	TradeRefundReq struct{ baseRequest }
+	TradeRefundReq struct{ BaseRequest }
 
 	TradeRefundBizModel struct {
 		OutTradeNo     string `json:"out_trade_no"`    // 订单支付时传入的商户订单号,不能和 trade_no同时为空。

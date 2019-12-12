@@ -2,7 +2,7 @@ package response
 
 // 查询转账订单接口
 type FundTransOrderQueryResp struct {
-	baseResponse
+	BaseResponse
 	OrderId string `json:"order_id"` // 支付宝转账单据号，查询失败不返回。
 
 	//转账单据状态。

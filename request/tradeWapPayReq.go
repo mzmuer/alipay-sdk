@@ -2,7 +2,7 @@ package request
 
 // 手机网站支付
 type (
-	TradeWapPayReq struct{ baseRequest }
+	TradeWapPayReq struct{ BaseRequest }
 
 	TradeWapPayBizModel struct {
 		Body            string `json:"body"`              // 对一笔交易的具体描述信息。如果是多种商品，请将商品描述字符串累加传给body。

@@ -2,7 +2,7 @@ package request
 
 // 统一收单交易退款查询
 type (
-	TradeRefundQueryReq struct{ baseRequest }
+	TradeRefundQueryReq struct{ BaseRequest }
 
 	TradeRefundQueryBizModel struct {
 		OutTradeNo   string `json:"out_trade_no"`   // 订单支付时传入的商户订单号,和支付宝交易号不能同时为空。 trade_no,out_trade_no如果同时存在优先取trade_no

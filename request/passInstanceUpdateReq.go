@@ -2,7 +2,7 @@ package request
 
 // 卡券实例发放接口
 type (
-	PassInstanceUpdateReq struct{ baseRequest }
+	PassInstanceUpdateReq struct{ BaseRequest }
 
 	PassInstanceUpdateBizModel struct {
 		SerialNumber string `json:"serial_number"` // 商户指定卡券唯一值，卡券JSON模板中fileInfo->serialNumber字段对应的值

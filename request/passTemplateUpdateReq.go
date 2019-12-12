@@ -2,7 +2,7 @@ package request
 
 // 卡券模板更新接口
 type (
-	PassTemplateUpdateReq struct{ baseRequest }
+	PassTemplateUpdateReq struct{ BaseRequest }
 
 	PassTemplateUpdateBizModel struct {
 		TplId      string `json:"tpl_id"`      // 商户用于控制模版的唯一性。（可以使用时间戳保证唯一性）

@@ -141,7 +141,7 @@ func (c *Client) _execute(r request.Request, result response.Response, accessTok
 			return string(b), err
 		}
 		//if !match { // 签名不匹配
-		//	return "", fmt.Errorf("sign check fail: check Sign and Data Fail")
+		//	return "", fmt.Errorf("sign check fail: check sign and Data Fail")
 		//}
 	}
 

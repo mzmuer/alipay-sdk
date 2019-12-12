@@ -4,7 +4,7 @@ import "encoding/json"
 
 // 统一收单交易退款接口响应
 type TradeRefundResp struct {
-	baseResponse
+	BaseResponse
 	// must
 	OutTradeNo   string `json:"out_trade_no"`   // 商户网站唯一订单号
 	TradeNo      string `json:"trade_no"`       // 该交易在支付宝系统中的交易流水号

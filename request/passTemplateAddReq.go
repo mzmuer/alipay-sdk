@@ -2,7 +2,7 @@ package request
 
 // 卡券模板创建接口接口
 type (
-	PassTemplateAddReq struct{ baseRequest }
+	PassTemplateAddReq struct{ BaseRequest }
 
 	PassTemplateAddBizModel struct {
 		UniqueId   string `json:"unique_id"`   // 商户用于控制模版的唯一性。（可以使用时间戳保证唯一性）

@@ -2,7 +2,7 @@ package request
 
 // 统一收单交易创建接口
 type (
-	TradeCreateReq struct{ baseRequest }
+	TradeCreateReq struct{ BaseRequest }
 
 	TradeCreateBizModel struct {
 		Body           string `json:"body"`            // 对一笔交易的具体描述信息。如果是多种商品，请将商品描述字符串累加传给body。

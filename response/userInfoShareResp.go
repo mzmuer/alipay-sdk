@@ -3,7 +3,7 @@ package response
 // 支付宝会员授权信息查询接口
 type (
 	UserInfoShareResp struct {
-		baseResponse
+		BaseResponse
 		UserID             string `json:"user_id"`              // 支付宝用户的userId
 		Avatar             string `json:"avatar"`               // 用户头像地址
 		Province           string `json:"province"`             // 省份名称

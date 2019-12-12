@@ -2,7 +2,7 @@ package request
 
 // 单笔转账到支付宝账户接口
 type (
-	FundTransToaccountReq struct{ baseRequest }
+	FundTransToaccountReq struct{ BaseRequest }
 
 	FundTransToaccountBizModel struct {
 		OutBizNo      string `json:"out_biz_no"`      // 商户转账唯一订单号。发起转账来源方定义的转账单据ID，用于将转账回执通知给来源方。

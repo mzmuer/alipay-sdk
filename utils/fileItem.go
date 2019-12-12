@@ -8,10 +8,10 @@ import (
 )
 
 type FileItem struct {
-	FileName string
-	MimeType string
-	File     io.Reader
-	Content  []byte // Content 设置之后就不会使用File
+	FileName string    // 非必填，上传时会随机生成文件名
+	MimeType string    // 非必填，会根据文件内容自动识别类型
+	File     io.Reader // File和Content二选一必填
+	Content  []byte    // Content 设置之后就不会使用File
 }
 
 // --

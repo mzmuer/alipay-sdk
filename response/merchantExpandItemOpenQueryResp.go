@@ -2,7 +2,7 @@ package response
 
 import "time"
 
-// 创建商品接口
+// 查询商品接口
 type (
 	CmdItemSkuInfo struct {
 		SkuId         string    `json:"sku_id"`

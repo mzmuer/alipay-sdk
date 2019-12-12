@@ -1,4 +1,4 @@
-package alipay
+package constant
 
 const (
 	SignTypeRSA  = "RSA"

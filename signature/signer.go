@@ -1,4 +1,4 @@
-package alipay
+package signature
 
 import (
 	"crypto"
@@ -9,13 +9,15 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+
+	"github.com/mzmuer/alipay-sdk/constant"
 )
 
-type signer struct {
+type Signer struct {
 	privateKey *rsa.PrivateKey
 }
 
-func NewSigner(privateKey []byte) (*signer, error) {
+func NewSigner(privateKey []byte) (*Signer, error) {
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
 		return nil, fmt.Errorf("failed to parse certificate PEM")
@@ -26,22 +28,22 @@ func NewSigner(privateKey []byte) (*signer, error) {
 		return nil, fmt.Errorf("failed to parse certificate: " + err.Error())
 	}
 
-	return &signer{privateKey: priKey}, err
+	return &Signer{privateKey: priKey}, err
 }
 
-func (s *signer) Sign(sourceContent string, signType string, charset string) (string, error) {
+func (s *Signer) Sign(sourceContent string, signType string, charset string) (string, error) {
 	var (
 		hashed = sha256.Sum256([]byte(sourceContent))
 		signed []byte
 		err    error
 	)
 
-	if signType == SignTypeRSA2 {
+	if signType == constant.SignTypeRSA2 {
 		signed, err = rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hashed[:])
 		if err != nil {
 			return "", err
 		}
-	} else if signType == SignTypeRSA {
+	} else if signType == constant.SignTypeRSA {
 		signed, err = rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA1, hashed[:])
 		if err != nil {
 			return "", err

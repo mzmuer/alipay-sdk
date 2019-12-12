@@ -1,21 +1,22 @@
-package alipay
+package utils
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"net/url"
-	"path/filepath"
 	"strings"
 
-	"github.com/mzmuer/alipay-sdk/utils"
+	"github.com/mzmuer/alipay-sdk/constant"
 )
 
-func doPost(postUrl string, m map[string]string) ([]byte, error) {
+func DoPost(postUrl string, m map[string]string) ([]byte, error) {
 	var (
-		cType = "application/x-www-form-urlencoded;charset=" + m[Charset]
+		cType = "application/x-www-form-urlencoded;charset=" + m[constant.Charset]
 		query = _buildQuery(m)
 	)
 
@@ -28,21 +29,30 @@ func doPost(postUrl string, m map[string]string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func doPostUploadFile(postUrl string, m map[string]string, fileParams map[string]*utils.FileItem) ([]byte, error) {
+// --
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+
+func DoPostUploadFile(postUrl string, m map[string]string, fileParams map[string]*FileItem) ([]byte, error) {
 	if fileParams == nil || len(fileParams) == 0 {
-		return doPost(postUrl, m)
+		return DoPost(postUrl, m)
 	}
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
 	for fieldName, file := range fileParams {
-		part, err := writer.CreateFormFile(fieldName, filepath.Base(file.FileName))
+		h := make(textproto.MIMEHeader)
+		h.Set("Content-Disposition",
+			fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+				quoteEscaper.Replace(fieldName), quoteEscaper.Replace(file.GetFileName())))
+		h.Set("Content-Type", file.GetMimeType())
+
+		part, err := writer.CreatePart(h)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = io.Copy(part, file.Content)
+		_, err = io.Copy(part, bytes.NewReader(file.GetContent()))
 		if err != nil {
 			return nil, err
 		}
@@ -61,7 +71,7 @@ func doPostUploadFile(postUrl string, m map[string]string, fileParams map[string
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", writer.FormDataContentType()+" ;charset="+m[Charset])
+	req.Header.Set("Content-Type", writer.FormDataContentType()+" ;charset="+m[constant.Charset])
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

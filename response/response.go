@@ -59,7 +59,6 @@ func (r *BaseResponse) GetAlipayCertSn() string {
 	return r.alipayCertSn
 }
 
-
 func ParseResponse(method string, data []byte, result Response) error {
 	var (
 		jsonKey = strings.ReplaceAll(method, ".", "_") + "_response"

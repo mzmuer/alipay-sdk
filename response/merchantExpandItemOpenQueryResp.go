@@ -1,24 +1,28 @@
 package response
 
-import "time"
+import (
+	"github.com/mzmuer/alipay-sdk/utils"
+)
 
 // 查询商品接口
 type (
 	CmdItemSkuInfo struct {
-		SkuId         string    `json:"sku_id"`
-		ItemId        string    `json:"item_id"`
-		Price         int32     `json:"price"`
-		OriginalPrice int32     `json:"original_price"`
-		Status        string    `json:"status"`
-		GmtCreate     time.Time `json:"gmt_create"`
-		GmtModified   time.Time `json:"gmt_modified"`
-		Inventory     int32     `json:"inventory"`
+		OriginalPrice   int        `json:"original_price"`
+		Price           int        `json:"price"`
+		GmtCreate       utils.Time `json:"gmt_create"`
+		GmtModified     utils.Time `json:"gmt_modified"`
+		Inventory       int        `json:"inventory"`
+		RemainInventory int        `json:"remain_inventory"`
+		SkuID           string     `json:"sku_id"`
+		Status          string     `json:"status"`
 	}
 
 	MaterialInfo struct {
-		MaterialId string `json:"material_id"`
-		Type       string `json:"type"`
-		Content    string `json:"content"`
+		GmtModified utils.Time `json:"gmt_modified"`
+		GmtCreate   utils.Time `json:"gmt_create"`
+		MaterialID  string     `json:"material_id"`
+		Type        string     `json:"type"`
+		Content     string     `json:"content"`
 	}
 	ItemExtInfo struct {
 		ExtKey   string `json:"ext_key"`
@@ -30,17 +34,15 @@ type (
 		PropertyValueList []string `json:"property_value_list"`
 	}
 	CmdItemInfo struct {
-		ItemId              string   `json:"item_id"`
+		ItemID              string   `json:"item_id"`
 		Type                string   `json:"type"`
 		Status              string   `json:"status"`
 		FrontCategoryIdList []string `json:"front_category_id_list"`
 		StandardCategoryId  string   `json:"standard_category_id"`
-		TargetId            string   `json:"target_id"`
+		TargetID            string   `json:"target_id"`
 		Description         string   `json:"description"`
 		TargetType          string   `json:"target_type"`
 		Name                string
-		GmtCreate           time.Time          `json:"gmt_create"`
-		GmtModified         time.Time          `json:"gmt_modified"`
 		SkuList             []CmdItemSkuInfo   `json:"sku_list"`
 		MaterialList        []MaterialInfo     `json:"material_list"`
 		ExtInfo             []ItemExtInfo      `json:"ext_info"`
@@ -48,6 +50,6 @@ type (
 	}
 	MerchantExpandItemOpenQueryResp struct {
 		BaseResponse
-		ItemList CmdItemInfo `json:"item_list"`
+		ItemList []CmdItemInfo `json:"item_list"`
 	}
 )

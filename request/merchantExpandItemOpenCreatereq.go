@@ -7,10 +7,17 @@ type (
 		BaseRequest
 	}
 
+	ItemSkuPropertyInfo struct {
+		PropertyKey   string `json:"property_key"`
+		PropertyValue string `json:"property_value"`
+	}
+
 	SkuCreateInfo struct {
-		Price         int32 `json:"price"`
-		OriginalPrice int32 `json:"original_price"`
-		Inventory     int32 `json:"inventory"`
+		Price         int32                 `json:"price"`
+		OriginalPrice int32                 `json:"original_price"`
+		Inventory     int32                 `json:"inventory"`
+		MaterialList  []MaterialCreateInfo  `json:"material_list"`
+		PropertyList  []ItemSkuPropertyInfo `json:"property_list"`
 	}
 
 	ItemExtInfo struct {

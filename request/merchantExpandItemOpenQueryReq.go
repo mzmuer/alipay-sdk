@@ -1,6 +1,6 @@
 package request
 
-// 创建商品接口
+// 查询商品接口
 // https://docs.open.alipay.com/api_4/ant.merchant.expand.item.open.query/
 type (
 	MerchantExpandItemOpenQueryReq struct {

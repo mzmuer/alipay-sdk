@@ -74,7 +74,7 @@ func main() {
 }
 ```
 
-## 支持接口
+## 目前支持接口
 * [alipay.trade.refund](https://docs.open.alipay.com/api_1/alipay.trade.refund)(统一收单交易退款接口)
 * [alipay.trade.wap.pay](https://docs.open.alipay.com/api_1/alipay.trade.wap.pay)(手机网站支付)
 * [alipay.trade.fastpay.refund.query](https://docs.open.alipay.com/api_1/alipay.trade.fastpay.refund.query)(统一收单交易退款查询)
@@ -92,3 +92,4 @@ func main() {
 * [ant.merchant.expand.item.open.create](https://docs.open.alipay.com/api_4/ant.merchant.expand.item.open.create)(创建商品接口)
 * [alipay.fund.trans.toaccount.transfer](https://docs.open.alipay.com/api_28/alipay.fund.trans.toaccount.transfer)(单笔转账到支付宝账户接口)
 * [alipay.fund.trans.order.query](https://docs.open.alipay.com/api_28/alipay.fund.trans.order.query)(查询转账订单接口)
+* 持续跟新...

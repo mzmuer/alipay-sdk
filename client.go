@@ -76,18 +76,15 @@ func NewCertClient(appId, privateKey, appPubCert, alipayRootCert, alipayPubCert 
 		alipayPublicKeyMap: make(map[string]*rsa.PublicKey),
 	}
 
-	err = c.loadAppPubCertSN(appPubCert)
-	if err != nil {
+	if err = c.loadAppPubCertSN(appPubCert); err != nil {
 		return nil, err
 	}
 
-	err = c.loadAliPayRootCert(alipayRootCert)
-	if err != nil {
+	if err = c.loadAliPayRootCert(alipayRootCert); err != nil {
 		return nil, err
 	}
 
-	err = c.loadAliPayPublicCert(alipayPubCert)
-	if err != nil {
+	if err = c.loadAliPayPublicCert(alipayPubCert); err != nil {
 		return nil, err
 	}
 
@@ -157,9 +154,9 @@ func (c *Client) RsaCheckV1(params map[string]string, charset, signType string) 
 		return true, nil
 	}
 
-	sign := params["sign"]
-	delete(params, "sign")
-	delete(params, "sign_type")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
+	delete(params, constant.SignType)
 
 	return c.SignChecker.Check(utils.GetSignatureContent(params), sign, signType, charset)
 }
@@ -170,8 +167,8 @@ func (c *Client) RsaCheckV2(params map[string]string, charset, signType string) 
 		return true, nil
 	}
 
-	sign := params["sign"]
-	delete(params, "sign")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
 
 	return c.SignChecker.Check(utils.GetSignatureContent(params), sign, signType, charset)
 }
@@ -185,11 +182,11 @@ func (c *Client) RsaCertCheckV1(params map[string]string, charset, signType stri
 		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
 	}
 
-	pSign := params["sign"]
-	delete(params, "sign")
-	delete(params, "sign_type")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
+	delete(params, constant.SignType)
 
-	return signature.NewSignCheckerWithPublicKey(k).Check(utils.GetSignatureContent(params), pSign, signType, charset)
+	return signature.NewSignCheckerWithPublicKey(k).Check(utils.GetSignatureContent(params), sign, signType, charset)
 }
 
 // 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
@@ -201,10 +198,10 @@ func (c *Client) RsaCertCheckV2(params map[string]string, charset, signType stri
 		return false, fmt.Errorf("cert check fail: ALIPAY_CERT_SN is Empty")
 	}
 
-	pSign := params["sign"]
-	delete(params, "sign")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
 
-	return signature.NewSignCheckerWithPublicKey(k).Check(utils.GetSignatureContent(params), pSign, signType, charset)
+	return signature.NewSignCheckerWithPublicKey(k).Check(utils.GetSignatureContent(params), sign, signType, charset)
 }
 
 // 构造请求map
@@ -273,12 +270,12 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	if c.SignType != "" {
 		var err error
 		signContent := utils.GetSignatureContent(params)
-		params["sign"], err = c.Signer.Sign(signContent, c.SignType, c.Charset)
+		params[constant.Sign], err = c.Signer.Sign(signContent, c.SignType, c.Charset)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		params["sign"] = ""
+		params[constant.Sign] = ""
 	}
 
 	return params, nil

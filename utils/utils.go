@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mzmuer/alipay-sdk/constant"
 	"github.com/mzmuer/alipay-sdk/signature"
 	"github.com/tjfoc/gmsm/sm2"
 )
@@ -81,17 +82,17 @@ func ParseCertificate(s string) (*sm2.Certificate, error) {
 // 公共的验签方法
 // 此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
 func RsaCheckV1(params map[string]string, publicKey, charset, signType string) (bool, error) {
-	sign := params["sign"]
-	delete(params, "sign")
-	delete(params, "sign_type")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
+	delete(params, constant.SignType)
 
 	return _rsaCheckV2(params, publicKey, charset, signType, sign)
 }
 
 // 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
 func RsaCheckV2(params map[string]string, publicKey, charset, signType string) (bool, error) {
-	sign := params["sign"]
-	delete(params, "sign")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
 
 	return _rsaCheckV2(params, publicKey, charset, signType, sign)
 }
@@ -107,17 +108,17 @@ func _rsaCheckV2(params map[string]string, publicKey, charset, signType, sign st
 
 //此方法会去掉sign_type做验签，暂时除生活号（原服务窗）激活开发者模式外都使用V1
 func RsaCertCheckV1(params map[string]string, alipayPublicCertPath, charset, signType string) (bool, error) {
-	sign := params["sign"]
-	delete(params, "sign")
-	delete(params, "sign_type")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
+	delete(params, constant.SignType)
 
 	return _rsaCertCheck(params, alipayPublicCertPath, charset, signType, sign)
 }
 
 // 此方法不会去掉sign_type验签，用于生活号（原服务窗）激活开发者模式
 func RsaCertCheckV2(params map[string]string, alipayPublicCertPath, charset, signType string) (bool, error) {
-	sign := params["sign"]
-	delete(params, "sign")
+	sign := params[constant.Sign]
+	delete(params, constant.Sign)
 
 	return _rsaCertCheck(params, alipayPublicCertPath, charset, signType, sign)
 }

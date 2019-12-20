@@ -1,6 +1,6 @@
 package request
 
-// 发送模板消息接口
+// 小程序发送模板消息
 type (
 	SendTemplateMsgReq struct{ BaseRequest }
 

@@ -1,6 +1,6 @@
 package request
 
-// 卡券实例发放接口
+// 卡券实例更新接口
 type (
 	PassInstanceUpdateReq struct{ BaseRequest }
 

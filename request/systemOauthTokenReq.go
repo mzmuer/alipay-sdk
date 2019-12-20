@@ -1,5 +1,6 @@
 package request
 
+// 换取授权访问令牌
 type SystemOauthTokenReq struct {
 	BaseRequest
 	GrantType    string `json:"grant_type"`    // 值为authorization_code时，代表用code换取；值为refresh_token时，代表用refresh_token换取

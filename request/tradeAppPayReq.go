@@ -34,12 +34,16 @@ type (
 		Channel string `json:"channel"`
 	}
 
+	BusinessParams struct {
+		TinyAppId string `json:"tinyAppId"`
+	}
 	ExtendParams struct {
 		SysServiceProviderID string `json:"sys_service_provider_id"`
 		HbFqNum              string `json:"hb_fq_num"`
 		HbFqSellerPercent    string `json:"hb_fq_seller_percent"`
 		IndustryRefluxInfo   string `json:"industry_reflux_info"`
 		CardType             string `json:"card_type"`
+		MerchantOrerUrl string `json:"merchant_orer_url"`
 	}
 
 	TradeAppPayGoodsDetail struct {
@@ -82,7 +86,7 @@ type (
 		DisablePayChannels  string                 `json:"disable_pay_channels"`
 		GoodsDetail         TradeAppPayGoodsDetail `json:"goods_detail"`
 		ExtUserInfo         ExtUserInfo            `json:"ext_user_info"`
-		BusinessParams      string                 `json:"business_params"`
+		BusinessParams BusinessParams `json:"business_params"`
 		AgreementSignParams SignParams             `json:"agreement_sign_params"`
 	}
 )

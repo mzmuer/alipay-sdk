@@ -13,7 +13,7 @@ import (
 	"github.com/mzmuer/alipay-sdk/response"
 	"github.com/mzmuer/alipay-sdk/signature"
 	"github.com/mzmuer/alipay-sdk/utils"
-	"github.com/tjfoc/gmsm/sm2"
+	sm2 "github.com/mzmuer/gmsm/x509"
 )
 
 type Client struct {
@@ -328,7 +328,6 @@ func (c *Client) loadAliPayRootCert(s string) error {
 			return fmt.Errorf("failed to parse certificate PEM")
 		}
 
-		// TODO: 自己实现SM2国密
 		cert, err := sm2.ParseCertificate(block.Bytes)
 		if err != nil {
 			return fmt.Errorf("failed to parse certificate: " + err.Error())

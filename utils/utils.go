@@ -15,7 +15,7 @@ import (
 
 	"github.com/mzmuer/alipay-sdk/constant"
 	"github.com/mzmuer/alipay-sdk/signature"
-	"github.com/tjfoc/gmsm/sm2"
+	sm2 "github.com/mzmuer/gmsm/x509"
 )
 
 var (

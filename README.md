@@ -40,8 +40,9 @@ func main() {
 	}
 
 	result := response.TradeCreateResp{}
-	b, err := p.Execute(&req, &result)
-	fmt.Println(b, err)
+	_, err = p.Execute(&req, &result)
+
+	fmt.Println(result, err)
 }
 ```
 ### 使用证书
@@ -68,9 +69,81 @@ func main() {
 	req.Code = "cc6c559845a64762b24e2cd63c4fZX47"
 
 	result := response.SystemOauthTokenResp{}
-	b, err := c.Execute(&req, &result)
+	_, err = c.Execute(&req, &result)
 
-	fmt.Println(b, err)
+	fmt.Println(result, err)
+}
+```
+### 如何使用未支持的接口
+   ```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/mzmuer/alipay-sdk/request"
+	"github.com/mzmuer/alipay-sdk/response"
+
+	"github.com/mzmuer/alipay-sdk"
+)
+
+type UimplementedReq struct {
+	request.BaseRequest
+	Field1 string `json:"field1"`
+	Field2 string `json:"field2"`
+	// ....
+}
+
+// 如果接口参数是在biz_model中，参考（request.TradeCreateReq）
+type UimplementedModel struct {
+	Field1 string `json:"field1"`
+	Field2 string `json:"field2"`
+    // ....
+}
+
+type UimplementedResp struct {
+	response.BaseResponse
+	Res1 string `json:"res1"`
+	Res2 string `json:"res2"`
+	// .....
+}
+
+// 必须实现该接口
+func (*UimplementedReq) GetMethod() string {
+	return "method.name"
+}
+
+// 如果除了request.BaseRequest还有额外参数，必须实现该接口（参考request.SystemOauthTokenReq）
+func (r *UimplementedReq) GetTextParams() map[string]string {
+	m := r.UdfParams
+	if m == nil {
+		m = map[string]string{}
+	}
+
+	m["field1"] = r.Field1
+	m["field2"] = r.Field1
+	return m
+}
+
+
+func main() {
+	c, err := alipay.NewCertClient("your appId", "privateKey", `appPubCert`, "alipayRootCert", "alipayPubCert", false)
+	if err != nil {
+		panic(err)
+	}
+
+	req := UimplementedReq{}
+	req.Field1 = ""
+	req.Field2 = ""
+	req.BizModel = UimplementedModel{
+		Field1: "",
+		Field2: "",
+	}
+
+	result := UimplementedResp{}
+	_, err = c.Execute(&req, &result)
+
+	fmt.Println(result, err)
 }
 ```
 

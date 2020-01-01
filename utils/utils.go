@@ -15,7 +15,7 @@ import (
 
 	"github.com/mzmuer/alipay-sdk/constant"
 	"github.com/mzmuer/alipay-sdk/signature"
-	sm2 "github.com/mzmuer/gmsm/x509"
+	sm2x509 "github.com/mzmuer/gmsm/x509"
 )
 
 var (
@@ -65,13 +65,13 @@ func GetSignatureContent(m map[string]string) string {
 }
 
 // 解析证书
-func ParseCertificate(s string) (*sm2.Certificate, error) {
+func ParseCertificate(s string) (*sm2x509.Certificate, error) {
 	block, _ := pem.Decode([]byte(strings.TrimSpace(s)))
 	if block == nil {
 		return nil, fmt.Errorf("failed to parse certificate PEM")
 	}
 
-	cert, err := sm2.ParseCertificate(block.Bytes)
+	cert, err := sm2x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse certificate: " + err.Error())
 	}
@@ -148,7 +148,7 @@ func _rsaCertCheck(params map[string]string, alipayPublicCertPath, charset, sign
 }
 
 // 获取证书的sn
-func GetCertSN(cert *sm2.Certificate) string {
+func GetCertSN(cert *sm2x509.Certificate) string {
 	var value = md5.Sum([]byte(cert.Issuer.String() + cert.SerialNumber.String()))
 	return hex.EncodeToString(value[:])
 }

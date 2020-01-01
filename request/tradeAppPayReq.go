@@ -1,7 +1,7 @@
 package request
 
 //https://docs.open.alipay.com/api_1/alipay.trade.app.pay/
-// 统一收单交易创建接口
+// app支付接口2.0
 type (
 	TradeAppPayReq struct{ BaseRequest }
 
@@ -43,7 +43,7 @@ type (
 		HbFqSellerPercent    string `json:"hb_fq_seller_percent"`
 		IndustryRefluxInfo   string `json:"industry_reflux_info"`
 		CardType             string `json:"card_type"`
-		MerchantOrerUrl string `json:"merchant_orer_url"`
+		MerchantOrerUrl      string `json:"merchant_orer_url"`
 	}
 
 	TradeAppPayGoodsDetail struct {
@@ -86,7 +86,7 @@ type (
 		DisablePayChannels  string                 `json:"disable_pay_channels"`
 		GoodsDetail         TradeAppPayGoodsDetail `json:"goods_detail"`
 		ExtUserInfo         ExtUserInfo            `json:"ext_user_info"`
-		BusinessParams BusinessParams `json:"business_params"`
+		BusinessParams      BusinessParams         `json:"business_params"`
 		AgreementSignParams SignParams             `json:"agreement_sign_params"`
 	}
 )

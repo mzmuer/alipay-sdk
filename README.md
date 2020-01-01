@@ -77,6 +77,7 @@ func main() {
 ## 目前支持接口
 * [alipay.trade.refund](https://docs.open.alipay.com/api_1/alipay.trade.refund)(统一收单交易退款接口)
 * [alipay.trade.wap.pay](https://docs.open.alipay.com/api_1/alipay.trade.wap.pay)(手机网站支付)
+* [alipay.trade.app.pay](https://docs.open.alipay.com/api_1/alipay.trade.app.pay )(app支付接口2.0)
 * [alipay.trade.fastpay.refund.query](https://docs.open.alipay.com/api_1/alipay.trade.fastpay.refund.query)(统一收单交易退款查询)
 * [alipay.trade.create](https://docs.open.alipay.com/api_1/alipay.trade.create)(统一收单交易创建接口)
 * [alipay.system.oauth.token](https://docs.open.alipay.com/api_9/alipay.system.oauth.token)(换取授权访问令牌)

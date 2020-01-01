@@ -75,7 +75,7 @@ func main() {
 }
 ```
 ### 如何使用未支持的接口
-   ```go
+```go
 package main
 
 import (
@@ -115,7 +115,7 @@ func (*UimplementedReq) GetMethod() string {
 
 // 如果除了request.BaseRequest还有额外参数，必须实现该接口（参考request.SystemOauthTokenReq）
 func (r *UimplementedReq) GetTextParams() map[string]string {
-	m := r.UdfParams
+    m := r.UdfParams
 	if m == nil {
 		m = map[string]string{}
 	}

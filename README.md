@@ -10,6 +10,7 @@ $ go get -u github.com/mzmuer/alipay-sdk
 ## 快速开始
 
 ### 使用密钥
+
 ```go
 package main
 
@@ -104,8 +105,8 @@ type UimplementedModel struct {
 type UimplementedResp struct {
 	response.BaseResponse
 	Res1 string `json:"res1"`
-	Res2 string `json:"res2"`
-	// .....
+	Res2 string `json:"res2"` 
+    // .....
 }
 
 // 必须实现该接口

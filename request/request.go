@@ -36,11 +36,6 @@ type (
 	}
 )
 
-// 获取API名称。
-func (*BaseRequest) GetMethod() string {
-	return "undefined methods"
-}
-
 // 返回通知地址
 func (r *BaseRequest) GetNotifyUrl() string {
 	return r.NotifyUrl

@@ -15,6 +15,6 @@ type (
 	}
 )
 
-func (*MerchantExpandItemOpenQueryReq) GetMethod() string {
+func (MerchantExpandItemOpenQueryReq) GetMethod() string {
 	return "ant.merchant.expand.item.open.query"
 }

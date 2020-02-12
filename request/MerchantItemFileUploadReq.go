@@ -11,7 +11,7 @@ type MerchantItemFileUploadReq struct {
 	FileContent *utils.FileItem `json:"file_content"` // 文件二进制字节流，最大为4M
 }
 
-func (*MerchantItemFileUploadReq) GetMethod() string {
+func (MerchantItemFileUploadReq) GetMethod() string {
 	return "alipay.merchant.item.file.upload"
 }
 

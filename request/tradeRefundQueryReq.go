@@ -11,6 +11,6 @@ type (
 	}
 )
 
-func (*TradeRefundQueryReq) GetMethod() string {
+func (TradeRefundQueryReq) GetMethod() string {
 	return "alipay.trade.fastpay.refund.query"
 }

@@ -10,6 +10,6 @@ type (
 	}
 )
 
-func (*PassTemplateUpdateReq) GetMethod() string {
+func (PassTemplateUpdateReq) GetMethod() string {
 	return "alipay.pass.template.update"
 }

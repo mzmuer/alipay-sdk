@@ -50,6 +50,6 @@ type (
 	}
 )
 
-func (*MerchantExpandItemOpenCreateReq) GetMethod() string {
+func (MerchantExpandItemOpenCreateReq) GetMethod() string {
 	return "ant.merchant.expand.item.open.create"
 }

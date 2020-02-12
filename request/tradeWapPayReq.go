@@ -16,6 +16,6 @@ type (
 	}
 )
 
-func (*TradeWapPayReq) GetMethod() string {
+func (TradeWapPayReq) GetMethod() string {
 	return "alipay.trade.wap.pay"
 }

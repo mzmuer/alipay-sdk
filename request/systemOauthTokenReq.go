@@ -8,7 +8,7 @@ type SystemOauthTokenReq struct {
 	RefreshToken string `json:"refresh_token"` // 刷刷新令牌，上次换取访问令牌时得到。见出参的refresh_token字段
 }
 
-func (*SystemOauthTokenReq) GetMethod() string {
+func (SystemOauthTokenReq) GetMethod() string {
 	return "alipay.system.oauth.token"
 }
 

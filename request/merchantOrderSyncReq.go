@@ -38,6 +38,6 @@ type (
 	}
 )
 
-func (*MerchantOrderSyncReq) GetMethod() string {
+func (MerchantOrderSyncReq) GetMethod() string {
 	return "alipay.merchant.order.sync"
 }

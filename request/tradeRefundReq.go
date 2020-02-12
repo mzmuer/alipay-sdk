@@ -14,6 +14,6 @@ type (
 	}
 )
 
-func (*TradeRefundReq) GetMethod() string {
+func (TradeRefundReq) GetMethod() string {
 	return "alipay.trade.refund"
 }

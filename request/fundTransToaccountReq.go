@@ -15,6 +15,6 @@ type (
 	}
 )
 
-func (*FundTransToaccountReq) GetMethod() string {
+func (FundTransToaccountReq) GetMethod() string {
 	return "alipay.fund.trans.toaccount.transfer"
 }

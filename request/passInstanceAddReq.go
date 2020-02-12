@@ -12,6 +12,6 @@ type (
 	}
 )
 
-func (*PassInstanceAddReq) GetMethod() string {
+func (PassInstanceAddReq) GetMethod() string {
 	return "alipay.pass.instance.add"
 }

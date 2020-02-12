@@ -28,6 +28,6 @@ type (
 	}
 )
 
-func (*TradeCreateReq) GetMethod() string {
+func (TradeCreateReq) GetMethod() string {
 	return "alipay.trade.create"
 }

@@ -37,6 +37,6 @@ type (
 	}
 )
 
-func (*TradePrecreateReq) GetMethod() string {
+func (TradePrecreateReq) GetMethod() string {
 	return "alipay.trade.precreate"
 }

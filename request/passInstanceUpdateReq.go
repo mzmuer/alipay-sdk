@@ -14,6 +14,6 @@ type (
 	}
 )
 
-func (*PassInstanceUpdateReq) GetMethod() string {
+func (PassInstanceUpdateReq) GetMethod() string {
 	return "alipay.pass.instance.update"
 }

@@ -91,6 +91,6 @@ type (
 	}
 )
 
-func (*TradeAppPayReq) GetMethod() string {
+func (TradeAppPayReq) GetMethod() string {
 	return "alipay.trade.app.pay"
 }

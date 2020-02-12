@@ -13,6 +13,6 @@ type (
 	}
 )
 
-func (*SendTemplateMsgReq) GetMethod() string {
+func (SendTemplateMsgReq) GetMethod() string {
 	return "alipay.open.app.mini.templatemessage.send"
 }

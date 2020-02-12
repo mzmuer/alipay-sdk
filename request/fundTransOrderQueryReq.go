@@ -10,6 +10,6 @@ type (
 	}
 )
 
-func (*FundTransOrderQueryReq) GetMethod() string {
+func (FundTransOrderQueryReq) GetMethod() string {
 	return "alipay.fund.trans.order.query"
 }

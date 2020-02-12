@@ -5,6 +5,6 @@ type (
 	UserInfoShareReq struct{ BaseRequest }
 )
 
-func (*UserInfoShareReq) GetMethod() string {
+func (UserInfoShareReq) GetMethod() string {
 	return "alipay.user.info.share"
 }

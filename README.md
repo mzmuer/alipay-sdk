@@ -167,4 +167,5 @@ func main() {
 * [ant.merchant.expand.item.open.create](https://docs.open.alipay.com/api_4/ant.merchant.expand.item.open.create)(创建商品接口)
 * [alipay.fund.trans.toaccount.transfer](https://docs.open.alipay.com/api_28/alipay.fund.trans.toaccount.transfer)(单笔转账到支付宝账户接口)
 * [alipay.fund.trans.order.query](https://docs.open.alipay.com/api_28/alipay.fund.trans.order.query)(查询转账订单接口)
+* [alipay.trade.precreate](https://docs.open.alipay.com/api_1/alipay.trade.precreate)(统一收单线下交易预创建)
 * 持续跟新...

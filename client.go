@@ -218,7 +218,7 @@ func (c *Client) getRequestHolderWithSign(r request.Request, accessToken, appAut
 	params[constant.NotifyUrl] = r.GetNotifyUrl()
 	params[constant.ReturnUrl] = r.GetReturnUrl()
 	params[constant.Charset] = c.Charset
-	params[constant.Timestamp] = time.Now().Format("2006-01-02 15:03:04")
+	params[constant.Timestamp] = time.Now().Format("2006-01-02 15:04:05")
 	if r.GetNeedEncrypt() {
 		params[constant.EncryptType] = c.EncryptType
 	}
